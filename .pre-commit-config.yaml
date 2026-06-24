@@ -1,0 +1,15 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: local
+    hooks:
+      - id: secha-metadata-validate
+        name: validate metadata configs
+        entry: python validate.py
+        language: system
+        pass_filenames: false
+        files: \.(ya?ml|json)$

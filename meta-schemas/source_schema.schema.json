@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "secha source schema",
+  "type": "object",
+  "required": ["vendor", "source", "format", "access", "fields"],
+  "additionalProperties": true,
+  "properties": {
+    "vendor": { "type": "string" },
+    "source": { "type": "string" },
+    "owner": { "type": "string" },
+    "contact": { "type": "string" },
+    "sensitivity": { "type": "string" },
+    "refresh_cadence": { "type": "string" },
+    "source_schema_version": { "type": "string" },
+    "format": {
+      "type": "object",
+      "required": ["type", "encoding"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["json", "csv", "parquet", "xml"] },
+        "record_path": { "type": "string" },
+        "encoding": { "type": "string" },
+        "decimal_separator": { "type": "string" },
+        "datetime_format": { "type": "string" }
+      }
+    },
+    "access": {
+      "type": "object",
+      "required": ["landing_root_env", "layout", "partition_keys"],
+      "additionalProperties": false,
+      "properties": {
+        "landing_root_env": { "type": "string" },
+        "layout": { "type": "string" },
+        "partition_keys": { "type": "array", "items": { "type": "string" } },
+        "snapshot_selection": { "type": "string" }
+      }
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "unit": { "type": ["string", "null"] },
+          "nullable": { "type": "boolean" },
+          "desc": { "type": "string" }
+        }
+      }
+    },
+    "device_factors": { "type": "object" }
+  }
+}

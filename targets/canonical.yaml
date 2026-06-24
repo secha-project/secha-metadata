@@ -1,0 +1,20 @@
+# =============================================================================
+# Sink binding: where/how the engine writes canonical data. SHARED across all
+# vendors (not per-vendor) - per-vendor files stay pure transformation knowledge.
+# =============================================================================
+target: canonical_measurement
+catalog: secha
+schema: canonical
+table: measurement
+format: delta
+write_mode: merge                      # idempotent re-runs
+merge_key: [measurement_id]
+measurement_id_from:                   # deterministic surrogate (idempotency)
+  [source_vendor, device_id, ts_utc, quantity, phase, variant, harmonic_order, source_row_id]
+partition_by: [source_vendor, event_date]
+# cluster_by: [source_vendor, device_id, ts_utc]   # Databricks liquid clustering (deferred)
+
+dimensions:
+  device:           {schema: canonical, table: device,           merge_key: [device_id]}
+  location:         {schema: canonical, table: location,         merge_key: [location_id]}
+  charging_session: {schema: canonical, table: charging_session, merge_key: [session_id]}

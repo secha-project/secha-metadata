@@ -1,0 +1,46 @@
+<svg width="100%" viewBox="0 0 680 456" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>secha-metadata rulebook feeding the future transform engine</title>
+<desc>The secha-metadata rulebook (canonical model, vendor config, rule library, target binding) plus raw JSON from secha-ingestion feed the future secha-transform engine, which writes canonical.measurement in Delta/Unity Catalog and then serving views. Configs are authored, validated, and gated before use.</desc>
+<style>
+  text { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .t  { font-size: 14px; font-weight: 600; fill: #1b1b19; }
+  .ts { font-size: 12px; font-weight: 400; fill: #5b5b56; }
+  rect.box     { fill: #f7f6f1; stroke: #c9c7bd; }
+  .c-blue rect { fill: #e6f1fb; stroke: #378add; }
+  .c-gray rect { fill: #f1efe8; stroke: #888780; }
+  rect.c-blue  { fill: #e6f1fb; stroke: #378add; }
+  rect.c-gray  { fill: #f1efe8; stroke: #888780; }
+  .arr { stroke: #6b6b66; stroke-width: 1.5; fill: none; }
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1,1 L9,5 L1,9" fill="none" stroke="#6b6b66" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+<rect class="box" x="40" y="70" width="330" height="234" rx="8" stroke-width="0.5"/>
+<text class="t" x="205" y="92" text-anchor="middle">secha-metadata — the rulebook</text>
+
+<g class="c-blue"><rect x="56" y="104" width="298" height="40" rx="6" stroke-width="0.5"/><text class="t" x="205" y="124" text-anchor="middle">Canonical model</text><text class="ts" x="205" y="139" text-anchor="middle">schema · vocabulary · units</text></g>
+<g class="c-blue"><rect x="56" y="150" width="298" height="40" rx="6" stroke-width="0.5"/><text class="t" x="205" y="170" text-anchor="middle">Vendor config</text><text class="ts" x="205" y="185" text-anchor="middle">source · mapping · validation</text></g>
+<g class="c-blue"><rect x="56" y="196" width="298" height="40" rx="6" stroke-width="0.5"/><text class="t" x="205" y="216" text-anchor="middle">Rule library</text><text class="ts" x="205" y="231" text-anchor="middle">typed transforms</text></g>
+<g class="c-blue"><rect x="56" y="242" width="298" height="40" rx="6" stroke-width="0.5"/><text class="t" x="205" y="262" text-anchor="middle">Target binding</text><text class="ts" x="205" y="277" text-anchor="middle">where canonical lands</text></g>
+
+<g class="c-blue"><rect x="40" y="332" width="330" height="46" rx="6" stroke-width="0.5"/><text class="t" x="205" y="353" text-anchor="middle">Authoring + validation</text><text class="ts" x="205" y="369" text-anchor="middle">edit · validate.py · CI gate</text></g>
+<line class="arr" x1="205" y1="332" x2="205" y2="306" marker-end="url(#arrow)" style="stroke-dasharray:5 3"/>
+<text class="ts" x="215" y="324" text-anchor="start">validated → merge</text>
+
+<g class="c-gray"><rect x="410" y="56" width="230" height="46" rx="6" stroke-width="0.5"/><text class="t" x="525" y="77" text-anchor="middle">Raw JSON</text><text class="ts" x="525" y="93" text-anchor="middle">from secha-ingestion</text></g>
+<g class="c-gray"><rect x="410" y="158" width="230" height="54" rx="6" stroke-width="0.5"/><text class="t" x="525" y="180" text-anchor="middle">secha-transform</text><text class="ts" x="525" y="196" text-anchor="middle">future engine — obeys rules</text></g>
+<g class="c-gray"><rect x="410" y="262" width="230" height="48" rx="6" stroke-width="0.5"/><text class="t" x="525" y="283" text-anchor="middle">canonical.measurement</text><text class="ts" x="525" y="299" text-anchor="middle">Delta / Unity Catalog</text></g>
+<g class="c-gray"><rect x="410" y="346" width="230" height="46" rx="6" stroke-width="0.5"/><text class="t" x="525" y="367" text-anchor="middle">serving views</text><text class="ts" x="525" y="383" text-anchor="middle">wide, for consumers</text></g>
+
+<line class="arr" x1="525" y1="102" x2="525" y2="158" marker-end="url(#arrow)"/>
+<text class="ts" x="535" y="133" text-anchor="start">raw rows</text>
+<line class="arr" x1="370" y1="185" x2="410" y2="185" marker-end="url(#arrow)"/>
+<text class="ts" x="390" y="178" text-anchor="middle">config</text>
+<line class="arr" x1="525" y1="212" x2="525" y2="262" marker-end="url(#arrow)"/>
+<text class="ts" x="535" y="240" text-anchor="start">writes</text>
+<line class="arr" x1="525" y1="310" x2="525" y2="346" marker-end="url(#arrow)"/>
+
+<rect class="c-blue" x="40" y="406" width="14" height="14" rx="3" stroke-width="0.5"/>
+<text class="ts" x="60" y="417" text-anchor="start">secha-metadata (the rulebook)</text>
+<rect class="c-gray" x="360" y="406" width="14" height="14" rx="3" stroke-width="0.5"/>
+<text class="ts" x="380" y="417" text-anchor="start">raw, engine, outputs</text>
+</svg>

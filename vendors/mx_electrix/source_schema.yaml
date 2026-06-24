@@ -1,0 +1,59 @@
+# --- header stub (onboarding/audit only; NOT a data-contract framework) ---
+vendor: mx_electrix
+source: measurements
+owner: "MX Electrix Oy (via Ville Heikkila, TAU)"
+contact: "ville.heikkila@tuni.fi"
+sensitivity: partner-confidential        # flows through to canonical / UC tags
+refresh_cadence: daily                    # informational
+source_schema_version: "v2"               # MX Electrix API version
+
+# --- format / access descriptor (how to READ + PARSE the raw) ---
+format:
+  type: json                              # /measurements/ returns a JSON array
+  record_path: "$"                        # array of objects at root
+  encoding: utf-8
+  decimal_separator: "."                  # JSON numerics; explicit for cross-vendor consistency
+  datetime_format: iso8601                # naive ISO from source; engine attaches UTC
+
+access:
+  landing_root_env: SECHA_LANDING_ROOT    # ingestion + transform share this root
+  layout: "vendor=mx_electrix/source=measurements/date={date}/meter={meter}"
+  partition_keys: [meter, date]
+  snapshot_selection: latest_by_fetched_at
+
+# --- vendor-specific scaling inputs (resolved from the /meters/ device list) ---
+device_factors:
+  current_factor: ik
+  voltage_factor: uk
+
+# --- logical fields (data dictionary; subset for the vertical slice) ---
+# `desc` is carried VERBATIM from secha_electrix_measurements_v1.1.xlsx (the vendor data dictionary).
+fields:
+  - {name: id,        type: int,    nullable: false, desc: "timestamp and meter specific id number for the measurements"}
+  - {name: meter,     type: int,    nullable: false, desc: "meter specific id number"}
+  - {name: timestamp, type: string, nullable: false, desc: "timestamp in UTC time in ISO-8601 format"}
+  - {name: fhz,   type: float, unit: Hz, nullable: true, desc: "fundamental power line frequency"}
+  - {name: ul1v,  type: float, unit: V,  nullable: true, desc: "voltage for phase L1"}
+  - {name: ul2v,  type: float, unit: V,  nullable: true, desc: "voltage for phase L2"}
+  - {name: ul3v,  type: float, unit: V,  nullable: true, desc: "voltage for phase L3"}
+  - {name: il1a,  type: float, unit: A,  nullable: true, desc: "current for phase L1"}
+  - {name: il2a,  type: float, unit: A,  nullable: true, desc: "current for phase L2"}
+  - {name: il3a,  type: float, unit: A,  nullable: true, desc: "current for phase L3"}
+  - {name: i_n,   type: float, unit: A,  nullable: true, desc: "current for neutral line"}
+  - {name: dl1,   type: float, unit: "%", nullable: true, desc: "voltage distortion relative to fundamental phase L1"}
+  - {name: dl2,   type: float, unit: "%", nullable: true, desc: "voltage distortion relative to fundamental phase L2"}
+  - {name: dl3,   type: float, unit: "%", nullable: true, desc: "voltage distortion relative to fundamental phase L3"}
+  - {name: pfl1,  type: float, unit: "-", nullable: true, desc: "Power factor phase L1"}
+  - {name: pfl2,  type: float, unit: "-", nullable: true, desc: "Power factor phase L2"}
+  - {name: pfl3,  type: float, unit: "-", nullable: true, desc: "Power factor phase L3"}
+  - {name: u2u1,  type: float, unit: "%", nullable: true, desc: "Voltage unbalance U2/U1, negative phase sequence component percentage of the positive phase sequence component"}
+  - {name: u0u1,  type: float, unit: "%", nullable: true, desc: "Voltage unbalance U0/U1, zero component percentage of the positive phase sequence component"}
+  - {name: u3l1,  type: float, unit: "%", nullable: true, desc: "3rd harmonic voltage component relative to fundamental phase L1"}
+  - {name: u5l1,  type: float, unit: "%", nullable: true, desc: "5th harmonic voltage component relative to fundamental phase L1"}
+  - {name: u7l1,  type: float, unit: "%", nullable: true, desc: "7th harmonic voltage component relative to fundamental phase L1"}
+  - {name: u3l2,  type: float, unit: "%", nullable: true, desc: "3rd harmonic voltage component relative to fundamental phase L2"}
+  - {name: u5l2,  type: float, unit: "%", nullable: true, desc: "5th harmonic voltage component relative to fundamental phase L2"}
+  - {name: u7l2,  type: float, unit: "%", nullable: true, desc: "7th harmonic voltage component relative to fundamental phase L2"}
+  - {name: u3l3,  type: float, unit: "%", nullable: true, desc: "3rd harmonic voltage component relative to fundamental phase L3"}
+  - {name: u5l3,  type: float, unit: "%", nullable: true, desc: "5th harmonic voltage component relative to fundamental phase L3"}
+  - {name: u7l3,  type: float, unit: "%", nullable: true, desc: "7th harmonic voltage component relative to fundamental phase L3"}

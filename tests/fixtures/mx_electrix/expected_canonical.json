@@ -1,0 +1,29 @@
+[
+  {"source_vendor": "mx_electrix", "source_dataset": "measurements", "device_id": "mx_electrix:meter:22",
+   "ts_utc": "2025-05-21T00:00:00Z", "quantity": "frequency", "phase": "none", "variant": "none",
+   "value": 50.0, "unit": "Hz", "aggregation": "average", "interval_s": 60, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "mx_electrix", "source_dataset": "measurements", "device_id": "mx_electrix:meter:22",
+   "ts_utc": "2025-05-21T00:00:00Z", "quantity": "thd_voltage", "phase": "L1", "variant": "none",
+   "value": 0.89, "unit": "percent", "aggregation": "average", "interval_s": 60, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "mx_electrix", "source_dataset": "measurements", "device_id": "mx_electrix:meter:22",
+   "ts_utc": "2025-05-21T00:00:00Z", "quantity": "thd_voltage", "phase": "L2", "variant": "none",
+   "value": 0.93, "unit": "percent", "aggregation": "average", "interval_s": 60, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "mx_electrix", "source_dataset": "measurements", "device_id": "mx_electrix:meter:22",
+   "ts_utc": "2025-05-21T00:00:00Z", "quantity": "thd_voltage", "phase": "L3", "variant": "none",
+   "value": 0.88, "unit": "percent", "aggregation": "average", "interval_s": 60, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "mx_electrix", "source_dataset": "measurements", "device_id": "mx_electrix:meter:22",
+   "ts_utc": "2025-05-21T00:00:00Z", "quantity": "power_factor", "phase": "L1", "variant": "none",
+   "value": 0.99, "unit": "ratio", "aggregation": "average", "interval_s": 60, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "mx_electrix", "source_dataset": "measurements", "device_id": "mx_electrix:meter:22",
+   "ts_utc": "2025-05-21T00:00:00Z", "quantity": "voltage_unbalance_negative_seq", "phase": "none", "variant": "none",
+   "value": 0.17, "unit": "percent", "aggregation": "average", "interval_s": 60, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "mx_electrix", "source_dataset": "measurements", "device_id": "mx_electrix:meter:22",
+   "ts_utc": "2025-05-21T00:00:00Z", "quantity": "voltage_unbalance_zero_seq", "phase": "none", "variant": "none",
+   "value": 0.19, "unit": "percent", "aggregation": "average", "interval_s": 60, "quality": "ok", "schema_version": "1.0.0"}
+]

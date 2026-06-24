@@ -1,0 +1,72 @@
+# =============================================================================
+# SECHA canonical target schema (canonical "to us", standards-aware)
+# Long-format measurement fact + thin dimensions. Vendor-agnostic.
+# Quantities live in quantity_vocabulary.yaml; units in units.yaml.
+# =============================================================================
+schema_version: "1.0.0"
+namespace: secha.canonical
+
+# Controlled vocabularies (the shared semantic layer). Quantities are separate
+# (quantity_vocabulary.yaml) so new vendors extend that file, not this one.
+enums:
+  source_vendor: [mx_electrix, kempower, procem_schneider_pm3255]
+  phase: [L1, L2, L3, N, L1_L2, L2_L3, L3_L1, three_phase, none]
+  variant: [none, fundamental, fryze]
+  aggregation: [instantaneous, average, minimum, maximum, counter]
+  quality_flag: [ok, estimated, suspect, missing]
+
+entities:
+  measurement:
+    grain: "one (device, ts, quantity, phase, variant, harmonic_order) reading"
+    fields:
+      - {name: measurement_id,      type: string,    nullable: false, runtime: true,  desc: "engine surrogate; hash of natural key"}
+      - {name: source_vendor,       type: enum:source_vendor, nullable: false}
+      - {name: source_dataset,      type: string,    nullable: false}
+      - {name: device_id,           type: string,    nullable: false, fk: device.device_id}
+      - {name: location_id,         type: string,    nullable: true,  fk: location.location_id}
+      - {name: session_id,          type: string,    nullable: true,  fk: charging_session.session_id}
+      - {name: ts_utc,              type: timestamp, nullable: true,  desc: "absolute UTC instant"}
+      - {name: ts_session_offset_s, type: long,      nullable: true,  desc: "seconds from session start (Kempower)"}
+      - {name: quantity,            type: vocab:quantity,    nullable: false}
+      - {name: phase,               type: enum:phase,        nullable: false}
+      - {name: variant,             type: enum:variant,      nullable: false, default: none}
+      - {name: harmonic_order,      type: int,       nullable: true,  desc: "set for harmonic_* quantities"}
+      - {name: value,              type: double,     nullable: false}
+      - {name: unit,               type: registry:unit,      nullable: false}
+      - {name: aggregation,        type: enum:aggregation,   nullable: false, default: instantaneous}
+      - {name: interval_s,         type: int,        nullable: true,  desc: "native resolution; never pre-aggregated (IEC 61000-4-30)"}
+      - {name: quality,            type: enum:quality_flag,  nullable: false, default: ok}
+      - {name: source_row_id,      type: string,     nullable: true}
+      - {name: schema_version,     type: string,     nullable: false}
+      - {name: ingested_at,        type: timestamp,  nullable: false, runtime: true}
+
+  charging_session:
+    grain: "one charging transaction (EV sources)"
+    fields:
+      - {name: session_id,    type: string, nullable: false}
+      - {name: source_vendor, type: enum:source_vendor, nullable: false}
+      - {name: ev_model,      type: string, nullable: true}
+      - {name: ev_brand,      type: string, nullable: true}
+      - {name: country,       type: string, nullable: true}
+      - {name: cal_year,      type: int,    nullable: true}
+      - {name: cal_month,     type: int,    nullable: true}
+      - {name: weekday,       type: string, nullable: true}
+      - {name: schema_version,type: string, nullable: false}
+
+  device:
+    grain: "one physical meter / charger / instrument"
+    fields:
+      - {name: device_id,         type: string, nullable: false}
+      - {name: source_vendor,     type: enum:source_vendor, nullable: false}
+      - {name: vendor_device_ref, type: string, nullable: true}
+      - {name: manufacturer,      type: string, nullable: true}
+      - {name: model,             type: string, nullable: true}
+      - {name: location_id,       type: string, nullable: true, fk: location.location_id}
+
+  location:
+    grain: "one site or named measurement point"
+    fields:
+      - {name: location_id, type: string, nullable: false}
+      - {name: label,       type: string, nullable: true}
+      - {name: path,        type: string, nullable: true}
+      - {name: country,     type: string, nullable: true}

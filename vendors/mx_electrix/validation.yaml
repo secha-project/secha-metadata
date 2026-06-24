@@ -1,0 +1,10 @@
+# Row-level validation + corrections for MX Electrix (in scope: row-level only).
+vendor: mx_electrix
+rules:
+  - {field: timestamp, type: not_null,                          on_fail: reject_row}
+  - {field: meter,     type: not_null,                          on_fail: reject_row}
+  - {quantity: frequency,   type: range, min: 45, max: 65,      on_fail: flag_suspect}
+  - {quantity: voltage,     type: range, min: 0,  max: 1000,    on_fail: flag_suspect}
+  - {quantity: power_factor, type: range, min: -1, max: 1,      on_fail: flag_suspect}
+  # value missing in a wide source cell is expected -> drop that emitted row, not the record
+  - {entity: measurement, field: value, type: not_null,        on_fail: drop_row}

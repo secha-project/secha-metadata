@@ -1,0 +1,37 @@
+# =============================================================================
+# Typed transformation-rule registry. A rule referenced by any mapping MUST
+# exist here with matching args. Typing lets the meta-schema/validator check
+# calls and lets the future LLM authoring assistant compose configs safely.
+# =============================================================================
+schema_version: "1.0.0"
+
+rules:
+  none:
+    params: {}
+    returns: any
+    description: "pass the value through unchanged"
+
+  parse_timestamp:
+    params:
+      format: {type: string, required: false, default: iso8601}
+      tz:     {type: string, required: false, default: UTC}
+    returns: timestamp
+    description: "parse a source timestamp string into a UTC timestamp"
+
+  parse_decimal:
+    params:
+      decimal_separator: {type: string, required: false, default: "."}
+    returns: double
+    description: "parse a numeric string honouring a locale decimal separator"
+
+  scale_by_factor:
+    params:
+      factor_field: {type: string, required: true}
+      op:           {type: enum, values: [multiply, divide], required: false, default: multiply}
+    returns: double
+    description: "scale a numeric value by a per-device factor (e.g. uk, ik, uk_ik)"
+
+  slugify:
+    params: {}
+    returns: string
+    description: "normalise free text to a stable id token"

@@ -1,0 +1,15 @@
+# Canonical unit registry. Engine normalises source units to these.
+schema_version: "1.0.0"
+
+units:
+  Hz:      {dimension: frequency,       si: true}
+  V:       {dimension: voltage,         si: true}
+  A:       {dimension: current,         si: true}
+  W:       {dimension: power_active,    si: true}
+  var:     {dimension: power_reactive,  si: true}
+  VA:      {dimension: power_apparent,  si: true}
+  ratio:   {dimension: dimensionless,   si: true}
+  percent: {dimension: dimensionless,   si: false}
+  Wh:      {dimension: energy_active,   si: false}
+  varh:    {dimension: energy_reactive, si: false}
+  degC:    {dimension: temperature,     si: false}

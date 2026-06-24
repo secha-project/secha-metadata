@@ -1,0 +1,75 @@
+<svg width="100%" viewBox="0 0 680 588" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>MX Electrix slice: how meters and measurements map to canonical entities</title>
+<desc>One /meters/ record maps to a canonical device and location dimension; one wide /measurements/ record unpivots into many long measurement-fact rows, each a quantity-phase-value-unit, with voltages/currents scaled by the device uk/ik factors.</desc>
+<style>
+  text { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .t  { font-size: 14px; font-weight: 600; fill: #1b1b19; }
+  .th { font-size: 14px; font-weight: 600; fill: #1b1b19; }
+  .ts { font-size: 12px; font-weight: 400; fill: #5b5b56; }
+  rect.box     { fill: #f7f6f1; stroke: #c9c7bd; }
+  .c-blue rect { fill: #e6f1fb; stroke: #378add; }
+  .c-gray rect { fill: #f1efe8; stroke: #888780; }
+  rect.c-blue  { fill: #e6f1fb; stroke: #378add; }
+  rect.c-gray  { fill: #f1efe8; stroke: #888780; }
+  .arr { stroke: #6b6b66; stroke-width: 1.5; fill: none; }
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M1,1 L9,5 L1,9" fill="none" stroke="#6b6b66" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+<text class="th" x="40" y="38">1 · /meters/  →  device &amp; location (dimensions)</text>
+
+<g class="c-gray"><rect x="40" y="52" width="280" height="124" rx="6" stroke-width="0.5"/></g>
+<text class="t"  x="54" y="72">MX Electrix /meters/ (1 record)</text>
+<text class="ts" x="54" y="92">id: 22</text>
+<text class="ts" x="54" y="108">serialnumber: 1009202401</text>
+<text class="ts" x="54" y="124">location: Viinikka ABC</text>
+<text class="ts" x="54" y="140">ik (current factor): 1.0</text>
+<text class="ts" x="54" y="156">uk (voltage factor): 1.0</text>
+
+<line class="arr" x1="320" y1="100" x2="380" y2="100" marker-end="url(#arrow)"/>
+<text class="ts" x="350" y="93" text-anchor="middle">maps to</text>
+
+<g class="c-blue"><rect x="382" y="52" width="258" height="80" rx="6" stroke-width="0.5"/></g>
+<text class="t"  x="396" y="72">device (canonical dim)</text>
+<text class="ts" x="396" y="92">device_id: mx_electrix:meter:22</text>
+<text class="ts" x="396" y="108">manufacturer: MX Electrix</text>
+<text class="ts" x="396" y="124">model: Laatuvahti 3</text>
+
+<g class="c-blue"><rect x="382" y="140" width="258" height="36" rx="6" stroke-width="0.5"/></g>
+<text class="t"  x="396" y="158">location (canonical dim)</text>
+<text class="ts" x="396" y="172">label: Viinikka ABC · country: Finland</text>
+
+<text class="ts" x="40" y="200">ik / uk from /meters/ are used to scale the voltage &amp; current values below.</text>
+
+<text class="th" x="40" y="232">2 · /measurements/  →  measurement (fact): wide record unpivots to long rows</text>
+
+<g class="c-gray"><rect x="40" y="246" width="600" height="66" rx="6" stroke-width="0.5"/></g>
+<text class="t"  x="54" y="266">MX Electrix /measurements/ — 1 wide record (~240 columns)</text>
+<text class="ts" x="54" y="286">timestamp: 2025-05-21T00:00:00   fhz: 50.0   ul1v: 236.16   dl1: 0.89</text>
+<text class="ts" x="54" y="302">u2u1: 0.17   u0u1: 0.19   u3l1: 0.8   …</text>
+
+<line class="arr" x1="340" y1="312" x2="340" y2="346" marker-end="url(#arrow)"/>
+<text class="ts" x="352" y="332" text-anchor="start">unpivot ↓  1 row per measured quantity</text>
+
+<text class="t" x="40" y="340">measurement — canonical fact (long)</text>
+
+<g class="c-blue"><rect x="40" y="350" width="600" height="26" rx="4" stroke-width="0.5"/></g>
+<text class="th" x="50"  y="368">from (src)</text>
+<text class="th" x="150" y="368">canonical quantity</text>
+<text class="th" x="392" y="368">phase</text>
+<text class="th" x="452" y="368">value</text>
+<text class="th" x="556" y="368">unit</text>
+
+<rect class="box" x="40" y="376" width="600" height="186" rx="4" stroke-width="0.5"/>
+<text class="ts" x="50"  y="402">fhz</text><text class="ts" x="150" y="402">frequency</text><text class="ts" x="392" y="402">none</text><text class="ts" x="452" y="402">50.0</text><text class="ts" x="556" y="402">Hz</text>
+<text class="ts" x="50"  y="430">ul1v</text><text class="ts" x="150" y="430">voltage</text><text class="ts" x="392" y="430">L1</text><text class="ts" x="452" y="430">236.16</text><text class="ts" x="556" y="430">V</text>
+<text class="ts" x="50"  y="458">dl1</text><text class="ts" x="150" y="458">thd_voltage</text><text class="ts" x="392" y="458">L1</text><text class="ts" x="452" y="458">0.89</text><text class="ts" x="556" y="458">percent</text>
+<text class="ts" x="50"  y="486">u3l1</text><text class="ts" x="150" y="486">harmonic_voltage (order 3)</text><text class="ts" x="392" y="486">L1</text><text class="ts" x="452" y="486">0.8</text><text class="ts" x="556" y="486">percent</text>
+<text class="ts" x="50"  y="514">u2u1</text><text class="ts" x="150" y="514">voltage_unbalance_negative_seq</text><text class="ts" x="392" y="514">none</text><text class="ts" x="452" y="514">0.17</text><text class="ts" x="556" y="514">percent</text>
+<text class="ts" x="50"  y="542">u0u1</text><text class="ts" x="150" y="542">voltage_unbalance_zero_seq</text><text class="ts" x="392" y="542">none</text><text class="ts" x="452" y="542">0.19</text><text class="ts" x="556" y="542">percent</text>
+
+<rect class="c-gray" x="40" y="572" width="13" height="13" rx="3" stroke-width="0.5"/>
+<text class="ts" x="58" y="582">MX Electrix raw</text>
+<rect class="c-blue" x="200" y="572" width="13" height="13" rx="3" stroke-width="0.5"/>
+<text class="ts" x="218" y="582">canonical</text>
+<text class="ts" x="340" y="582">device 22: uk=ik=1, so scaled value = raw value</text>
+</svg>

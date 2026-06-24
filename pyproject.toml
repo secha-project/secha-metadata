@@ -1,0 +1,36 @@
+[project]
+name = "secha-metadata"
+version = "0.1.0"
+description = "Metadata repository (config-as-code) for the SECHA EV-charging data interoperability engine."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Anas Uddin" }]
+license = { text = "Proprietary - SECHA project" }
+dependencies = [
+    "pyyaml>=6.0",
+    "jsonschema>=4.20",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2",
+    "ruff>=0.5",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+pythonpath = ["."]

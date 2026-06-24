@@ -1,0 +1,35 @@
+# MX Electrix /measurements/ -> canonical (LAV per-source mapping).
+# Each column entry emits one canonical measurement row (the wide->long unpivot).
+vendor: mx_electrix
+mapping_version: "1.1.0"
+target_schema_version: "1.0.0"
+source: measurements
+
+columns:
+  # frequency + distortion + power factor + unbalance: coefficient = 1 (no scaling)
+  - {src: fhz,  quantity: frequency,         phase: none, unit: Hz,      transform: none}
+  - {src: dl1,  quantity: thd_voltage,       phase: L1,   unit: percent, transform: none}
+  - {src: dl2,  quantity: thd_voltage,       phase: L2,   unit: percent, transform: none}
+  - {src: dl3,  quantity: thd_voltage,       phase: L3,   unit: percent, transform: none}
+  - {src: pfl1, quantity: power_factor,      phase: L1,   unit: ratio,   transform: none}
+  - {src: pfl2, quantity: power_factor,      phase: L2,   unit: ratio,   transform: none}
+  - {src: pfl3, quantity: power_factor,      phase: L3,   unit: ratio,   transform: none}
+  - {src: u2u1, quantity: voltage_unbalance_negative_seq, phase: none, unit: percent, transform: none}
+  - {src: u0u1, quantity: voltage_unbalance_zero_seq,     phase: none, unit: percent, transform: none}
+  # voltages + currents: scaled by per-device factors (uk/ik), resolved from /meters/
+  - {src: ul1v, quantity: voltage, phase: L1, unit: V, transform: scale_by_factor, args: {factor_field: uk}}
+  - {src: ul2v, quantity: voltage, phase: L2, unit: V, transform: scale_by_factor, args: {factor_field: uk}}
+  - {src: ul3v, quantity: voltage, phase: L3, unit: V, transform: scale_by_factor, args: {factor_field: uk}}
+  - {src: il1a, quantity: current, phase: L1, unit: A, transform: scale_by_factor, args: {factor_field: ik}}
+  - {src: il2a, quantity: current, phase: L2, unit: A, transform: scale_by_factor, args: {factor_field: ik}}
+  - {src: il3a, quantity: current, phase: L3, unit: A, transform: scale_by_factor, args: {factor_field: ik}}
+  - {src: i_n,  quantity: current, phase: N,  unit: A, transform: scale_by_factor, args: {factor_field: ik}}
+
+# generative rule: expand odd voltage harmonics without hand-listing each column.
+# Adding an order needs zero new engine code (extensibility demo, RQ3).
+generated:
+  - pattern: "u{order}l{p}"
+    quantity: harmonic_voltage
+    unit: percent
+    order: [3, 5, 7]
+    phase_map: {1: L1, 2: L2, 3: L3}

@@ -1,0 +1,18 @@
+# Normalise line endings: LF in the repo, auto on checkout. Keeps Windows dev + Linux CI consistent.
+* text=auto eol=lf
+
+# Windows scripts keep CRLF if any are added later
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Explicit text types (config-as-code repo)
+*.yaml text
+*.yml text
+*.json text
+*.svg text
+*.md text
+
+# Binary (no EOL munging / no diff noise)
+*.png binary
+*.xlsx binary
+*.parquet binary

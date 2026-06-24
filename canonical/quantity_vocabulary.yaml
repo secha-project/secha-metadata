@@ -1,0 +1,85 @@
+# =============================================================================
+# Controlled quantity vocabulary (the extensibility backbone).
+# A new vendor's new measurement type is added HERE (one entry) + a mapping line
+# -> a new ROW in the canonical fact, never a new column/table.
+# `standard_ref` aligns each quantity to an established standard where one exists
+# (standards-aware, not standards-conformant).
+# `description` makes the canonical side self-documenting (used by lineage.py).
+# =============================================================================
+schema_version: "1.1.0"
+
+quantities:
+  frequency:
+    default_unit: Hz
+    standard_ref: "IEC 61000-4-30:2025 (power frequency)"
+    description: "Fundamental power-line frequency."
+  voltage:
+    default_unit: V
+    standard_ref: "IEC 61000-4-30:2025 (voltage magnitude); EN 50160 limits"
+    description: "RMS voltage; phase-to-neutral (phase L1/L2/L3) or line-to-line (phase L1_L2/...)."
+  current:
+    default_unit: A
+    standard_ref: "IEC 61000-4-30:2025"
+    description: "RMS current per phase or neutral."
+  active_power:
+    default_unit: W
+    standard_ref: "IEEE 1459-2010"
+    description: "Active (real) power. variant=fundamental for fundamental-only active power."
+  reactive_power:
+    default_unit: var
+    standard_ref: "IEEE 1459-2010"
+    description: "Reactive power. variant distinguishes fundamental vs Fryze definitions."
+  apparent_power:
+    default_unit: VA
+    standard_ref: "IEEE 1459-2010"
+    description: "Apparent power."
+  power_factor:
+    default_unit: ratio
+    standard_ref: "IEEE 1459-2010"
+    description: "True power factor (ratio of active to apparent power)."
+  displacement_power_factor:
+    default_unit: ratio
+    standard_ref: "IEEE 1459-2010"
+    description: "Displacement power factor (cosine of the fundamental phase angle)."
+  thd_voltage:
+    default_unit: percent
+    standard_ref: "IEC 61000-4-7"
+    description: "Total harmonic distortion of voltage relative to the fundamental."
+  thd_current:
+    default_unit: percent
+    standard_ref: "IEC 61000-4-7; IEEE 519-2022 limits"
+    description: "Total harmonic distortion of current relative to the fundamental."
+  voltage_unbalance_negative_seq:
+    default_unit: percent
+    standard_ref: "IEC 61000-4-30:2025 (U2/U1)"
+    description: "Negative-sequence voltage unbalance: |U2|/|U1| as a percentage of the positive-sequence component."
+  voltage_unbalance_zero_seq:
+    default_unit: percent
+    standard_ref: "IEC 61000-4-30:2025 (U0/U1)"
+    description: "Zero-sequence voltage unbalance: |U0|/|U1| as a percentage of the positive-sequence component."
+  harmonic_voltage:
+    default_unit: percent
+    standard_ref: "IEC 61000-4-7"
+    requires: [harmonic_order]
+    description: "Individual harmonic voltage component as a percentage of the fundamental (requires harmonic_order)."
+  harmonic_current:
+    default_unit: percent
+    standard_ref: "IEC 61000-4-7"
+    requires: [harmonic_order]
+    description: "Individual harmonic current component as a percentage of the fundamental (requires harmonic_order)."
+  energy_active_import:
+    default_unit: Wh
+    standard_ref: "IEC 62053"
+    description: "Cumulative imported active energy counter."
+  energy_active_export:
+    default_unit: Wh
+    standard_ref: "IEC 62053"
+    description: "Cumulative exported active energy counter."
+  energy_reactive_import:
+    default_unit: varh
+    standard_ref: "IEC 62053"
+    description: "Cumulative imported reactive energy counter."
+  energy_reactive_export:
+    default_unit: varh
+    standard_ref: "IEC 62053"
+    description: "Cumulative exported reactive energy counter."

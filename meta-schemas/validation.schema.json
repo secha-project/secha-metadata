@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "secha validation rules",
+  "type": "object",
+  "required": ["vendor", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "vendor": { "type": "string" },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "on_fail"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "enum": ["range", "not_null", "correction", "enum"] },
+          "on_fail": { "enum": ["flag_suspect", "reject_row", "drop_row", "quarantine", "correct"] },
+          "field": { "type": "string" },
+          "quantity": { "type": "string" },
+          "entity": { "type": "string" },
+          "min": { "type": "number" },
+          "max": { "type": "number" },
+          "op": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    }
+  }
+}
