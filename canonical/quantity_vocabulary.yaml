@@ -6,7 +6,7 @@
 # (standards-aware, not standards-conformant).
 # `description` makes the canonical side self-documenting (used by lineage.py).
 # =============================================================================
-schema_version: "1.1.0"
+schema_version: "1.2.0"
 
 quantities:
   frequency:
@@ -68,18 +68,18 @@ quantities:
     requires: [harmonic_order]
     description: "Individual harmonic current component as a percentage of the fundamental (requires harmonic_order)."
   energy_active_import:
-    default_unit: Wh
+    default_unit: kWh
     standard_ref: "IEC 62053"
     description: "Cumulative imported active energy counter."
   energy_active_export:
-    default_unit: Wh
+    default_unit: kWh
     standard_ref: "IEC 62053"
     description: "Cumulative exported active energy counter."
   energy_reactive_import:
-    default_unit: varh
+    default_unit: kvarh
     standard_ref: "IEC 62053"
     description: "Cumulative imported reactive energy counter."
   energy_reactive_export:
-    default_unit: varh
+    default_unit: kvarh
     standard_ref: "IEC 62053"
     description: "Cumulative exported reactive energy counter."

@@ -5,6 +5,9 @@ Repository-level changes to `secha-metadata`. Per-vendor mapping changes are log
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Energy units corrected to **kWh / kvarh** (vocabulary `1.2.0`, units registry). Confirmed:
+  MX Electrix energy values are cumulative kWh despite attribute names ending in `wh`/`varh`.
 
 ## [0.1.0] - 2026-06-18
 ### Added

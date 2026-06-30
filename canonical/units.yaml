@@ -10,6 +10,7 @@ units:
   VA:      {dimension: power_apparent,  si: true}
   ratio:   {dimension: dimensionless,   si: true}
   percent: {dimension: dimensionless,   si: false}
-  Wh:      {dimension: energy_active,   si: false}
-  varh:    {dimension: energy_reactive, si: false}
+  # Confirmed: MX Electrix energy values are kWh/kvarh despite attribute names ending in wh/varh.
+  kWh:     {dimension: energy_active,   si: false}
+  kvarh:   {dimension: energy_reactive, si: false}
   degC:    {dimension: temperature,     si: false}
