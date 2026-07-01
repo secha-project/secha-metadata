@@ -21,6 +21,18 @@ access:
   partition_keys: [meter, date]
   snapshot_selection: latest_by_fetched_at
 
+# --- record-level interpretation (how the engine reads each record) ---
+record:
+  meter_field: meter
+  timestamp_field: timestamp
+  row_id_field: id
+  device_id_template: "mx_electrix:meter:{meter}"
+
+# --- source-level canonical defaults for this 1-minute measurements stream ---
+defaults:
+  aggregation: average
+  interval_s: 60
+
 # --- vendor-specific scaling inputs (resolved from the /meters/ device list) ---
 device_factors:
   current_factor: ik
