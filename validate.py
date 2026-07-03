@@ -1,17 +1,20 @@
 """Validate the secha-metadata repository.
 
-Two layers:
+Three layers:
 1. JSON-Schema conformance of every config against its meta-schema.
-2. Cross-file referential integrity (quantities/phases/units/transforms exist,
-   mapping src fields exist in the source schema, generated patterns expand to
-   real fields, golden fixtures conform to the canonical vocabulary).
+2. Cross-file referential integrity: quantities/phases/units/transforms exist; mapping
+   src fields exist in the source schema; transform args are complete AND known; scale
+   factor fields exist in device_factors; harmonic quantities only via generated rules;
+   record/defaults blocks reference real fields; golden fixtures conform to the vocabulary.
 3. No-collapse: no two mapped columns share a canonical identity tuple.
 
 Run directly (`python validate.py`) for CI, or via `pytest` (tests/ imports `validate`).
 """
 
 import json
+import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 import jsonschema
@@ -37,7 +40,9 @@ def _schema_validate(instance, schema_path: Path, errors: list[str], label: str)
         errors.append(f"[schema] {label}: {loc}: {err.message}")
 
 
-def _check_column(col: dict, ctx: dict, errors: list[str], label: str) -> None:
+def _check_column(
+    col: dict, ctx: dict, factor_fields: set[str], errors: list[str], label: str
+) -> None:
     if col["quantity"] not in ctx["quantities"]:
         errors.append(f"[xref] {label}: quantity '{col['quantity']}' not in vocabulary")
     if col["phase"] not in ctx["phases"]:
@@ -47,16 +52,74 @@ def _check_column(col: dict, ctx: dict, errors: list[str], label: str) -> None:
     variant = col.get("variant", "none")
     if variant not in ctx["variants"]:
         errors.append(f"[xref] {label}: variant '{variant}' not a canonical variant")
+
+    # quantities that REQUIRE harmonic_order can only come from generated rules — a
+    # direct column has no way to set the order and would land rows with a null order
+    quantity_meta = ctx["quantities_meta"].get(col["quantity"]) or {}
+    if "harmonic_order" in (quantity_meta.get("requires") or []):
+        errors.append(
+            f"[xref] {label}: quantity '{col['quantity']}' requires harmonic_order; "
+            "map it via a generated rule, not a direct column"
+        )
+
     transform = col.get("transform", "none")
     rule = ctx["rules"].get(transform)
     if rule is None:
         errors.append(f"[xref] {label}: transform '{transform}' not in rule library")
         return
-    required = {name for name, spec in (rule.get("params") or {}).items() if spec.get("required")}
+    params = rule.get("params") or {}
+    required = {name for name, spec in params.items() if spec.get("required")}
     provided = set((col.get("args") or {}).keys())
     missing = required - provided
     if missing:
         errors.append(f"[xref] {label}: transform '{transform}' missing args {sorted(missing)}")
+    unknown = provided - set(params)
+    if unknown:
+        # an ignored, typo'd arg (e.g. 'op_') would silently change behaviour downstream
+        errors.append(f"[xref] {label}: transform '{transform}' has unknown args {sorted(unknown)}")
+
+    # a typo'd factor_field would make the engine silently skip every affected column
+    factor_field = (col.get("args") or {}).get("factor_field")
+    if factor_field is not None and factor_field not in factor_fields:
+        errors.append(
+            f"[xref] {label}: factor_field '{factor_field}' not declared in "
+            f"source_schema.device_factors (known: {sorted(factor_fields)})"
+        )
+
+
+def _check_source_blocks(source_schema: dict, ctx: dict, errors: list[str], label: str) -> None:
+    """The engine-facing `record` and `defaults` blocks must reference real things."""
+    field_names = {f["name"] for f in source_schema.get("fields", [])}
+
+    duplicates = [
+        name
+        for name, n in Counter(f["name"] for f in source_schema.get("fields", [])).items()
+        if n > 1
+    ]
+    if duplicates:
+        errors.append(f"[xref] {label}: duplicate field names {sorted(duplicates)}")
+
+    record = source_schema.get("record") or {}
+    for key in ("meter_field", "timestamp_field", "row_id_field"):
+        value = record.get(key)
+        if value is not None and value not in field_names:
+            errors.append(f"[xref] {label}: record.{key} '{value}' not in source_schema.fields")
+    template = record.get("device_id_template")
+    if template is not None:
+        for placeholder in re.findall(r"\{(\w+)\}", template):
+            if placeholder not in field_names:
+                errors.append(
+                    f"[xref] {label}: device_id_template placeholder "
+                    f"'{{{placeholder}}}' not in source_schema.fields"
+                )
+
+    defaults = source_schema.get("defaults") or {}
+    aggregation = defaults.get("aggregation")
+    if aggregation is not None and aggregation not in ctx["aggregations"]:
+        errors.append(f"[xref] {label}: defaults.aggregation '{aggregation}' not canonical")
+    interval = defaults.get("interval_s")
+    if interval is not None and not isinstance(interval, int):
+        errors.append(f"[xref] {label}: defaults.interval_s must be an integer")
 
 
 def _check_no_collapse(mapping: dict, errors: list[str], label: str) -> None:
@@ -130,6 +193,7 @@ def validate() -> list[str]:
 
     ctx = {
         "quantities": set(vocab["quantities"]),
+        "quantities_meta": vocab["quantities"],
         "units": set(units["units"]),
         "phases": set(canon["enums"]["phase"]),
         "variants": set(canon["enums"]["variant"]),
@@ -161,9 +225,12 @@ def validate() -> list[str]:
         _schema_validate(validation, meta / "validation.schema.json", errors, f"{name}/validation")
 
         field_names = {f["name"] for f in source_schema.get("fields", [])}
+        factor_fields = set((source_schema.get("device_factors") or {}).values()) | {"uk_ik"}
+
+        _check_source_blocks(source_schema, ctx, errors, f"{name}/source_schema")
 
         for col in mapping.get("columns", []):
-            _check_column(col, ctx, errors, f"{name}/mapping[{col.get('src')}]")
+            _check_column(col, ctx, factor_fields, errors, f"{name}/mapping[{col.get('src')}]")
             if col["src"] not in field_names:
                 errors.append(
                     f"[xref] {name}/mapping: src '{col['src']}' not in source_schema.fields"

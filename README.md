@@ -19,7 +19,7 @@ Unity Catalog. Configs are **authored → validated → CI-gated** before they a
 ```
 secha-ingestion  →  raw JSON (Bronze)
 secha-metadata   →  the transformation rulebook (config-as-code)        ← this repo
-secha-transform  →  reads raw + rulebook → canonical data (Delta / UC)  ← next milestone
+secha-transform  →  reads raw + rulebook → canonical data (Delta / UC)  ← the engine (built)
 ```
 
 ## Layout
@@ -109,9 +109,11 @@ uv run ruff check .
 same commands without the `uv run` prefix.)
 
 ## Status / open items
-- **Scope:** vertical slice — MX Electrix `/measurements/` only. Scaled columns (`uk`/`ik`) are declared;
-  the golden fixture covers the coefficient=1 subset until the engine + device-factor join exist.
-- **Confirm:** energy-counter units (Wh vs kWh), device-factor direction, `/measurements/`
-  `fields` completeness.
+- **Scope:** vertical slice — MX Electrix `/measurements/` only. The `secha-transform` engine consumes
+  these configs end-to-end (a full real day: 1,440 records → ~36,000 canonical rows); the golden
+  fixture pins the coefficient=1 subset.
+- **Confirmed with the data platform:** energy counters are **kWh/kvarh** (despite `wh`/`varh` attribute
+  names); device-factor scaling is **multiply** by `uk`/`ik`; omitting the API `fields` param returns all
+  fields; timestamps are UTC.
 - **Full-schema discriminators** (per-column `aggregation`, `channel`, text values, DC quantities) are a
-  documented, additive next step before mapping beyond the slice for now.
+  documented, additive next step before mapping beyond the slice.

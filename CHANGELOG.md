@@ -5,7 +5,15 @@ Repository-level changes to `secha-metadata`. Per-vendor mapping changes are log
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added
+- Validator guards against silent misconfiguration: unknown transform args are rejected;
+  `scale_by_factor.factor_field` must be declared in `source_schema.device_factors`; quantities
+  requiring `harmonic_order` are forbidden in direct columns (generated rules only); the engine-facing
+  `record`/`defaults` blocks are shape-checked (fields exist, template placeholders resolve, canonical
+  aggregation, integer interval); duplicate field names are flagged. Unit tests pin each guard.
 ### Changed
+- `measurement_id_from` now includes `aggregation` — the full identity tuple — so min/max/mean variants
+  of the same quantity can never collide in the merge key (changed now, while no production data exists).
 - Energy units corrected to **kWh / kvarh** (vocabulary `1.2.0`, units registry). Confirmed:
   MX Electrix energy values are cumulative kWh despite attribute names ending in `wh`/`varh`.
 

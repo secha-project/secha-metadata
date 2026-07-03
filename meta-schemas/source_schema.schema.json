@@ -35,6 +35,24 @@
         "snapshot_selection": { "type": "string" }
       }
     },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "meter_field": { "type": "string" },
+        "timestamp_field": { "type": "string" },
+        "row_id_field": { "type": "string" },
+        "device_id_template": { "type": "string" }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "aggregation": { "type": "string" },
+        "interval_s": { "type": "integer" }
+      }
+    },
     "fields": {
       "type": "array",
       "items": {

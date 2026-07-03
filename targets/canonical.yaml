@@ -9,8 +9,9 @@ table: measurement
 format: delta
 write_mode: merge                      # idempotent re-runs
 merge_key: [measurement_id]
-measurement_id_from:                   # deterministic surrogate (idempotency)
-  [source_vendor, device_id, ts_utc, quantity, phase, variant, harmonic_order, source_row_id]
+measurement_id_from:                   # deterministic surrogate (idempotency); the full identity
+  # tuple INCLUDING aggregation, so min/max/mean variants of the same quantity never collide
+  [source_vendor, device_id, ts_utc, quantity, phase, variant, harmonic_order, aggregation, source_row_id]
 partition_by: [source_vendor, event_date]
 # cluster_by: [source_vendor, device_id, ts_utc]   # Databricks liquid clustering (deferred)
 
