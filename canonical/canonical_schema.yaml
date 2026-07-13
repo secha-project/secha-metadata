@@ -9,7 +9,7 @@ namespace: secha.canonical
 # Controlled vocabularies (the shared semantic layer). Quantities are separate
 # (quantity_vocabulary.yaml) so new vendors extend that file, not this one.
 enums:
-  source_vendor: [mx_electrix, kempower, procem_schneider_pm3255]
+  source_vendor: [mx_electrix, kempower, procem_schneider_pm3255, procem_kampusareena_pq]
   phase: [L1, L2, L3, N, L1_L2, L2_L3, L3_L1, three_phase, none]
   variant: [none, fundamental, fryze]
   aggregation: [instantaneous, average, minimum, maximum, counter]

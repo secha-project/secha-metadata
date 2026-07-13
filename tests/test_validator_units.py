@@ -108,3 +108,48 @@ def test_non_canonical_default_aggregation_is_caught() -> None:
 def test_duplicate_field_names_are_caught() -> None:
     schema = {"fields": [{"name": "fhz", "type": "float"}, {"name": "fhz", "type": "float"}]}
     assert any("duplicate field names" in e for e in _source_errors(schema))
+
+
+# --- long-shape (`rows:`) guards -------------------------------------------------------
+
+
+def test_rows_entry_with_harmonic_order_passes() -> None:
+    """Long `rows:` entries carry harmonic_order explicitly; that satisfies `requires`."""
+    entry = {
+        "key": "23542",
+        "quantity": "harmonic_voltage",
+        "phase": "L1",
+        "harmonic_order": 3,
+        "unit": "percent",
+    }
+    assert _column_errors(entry) == []
+
+
+def test_harmonic_order_on_nonharmonic_quantity_is_caught() -> None:
+    """A meaningless harmonic_order (e.g. on plain voltage) is a config bug."""
+    entry = {"key": "23524", "quantity": "voltage", "phase": "L1", "harmonic_order": 3, "unit": "V"}
+    assert any("does not use it" in e for e in _column_errors(entry))
+
+
+def test_noncanonical_row_aggregation_is_caught() -> None:
+    """Per-row aggregation overrides must come from the canonical enum."""
+    entry = {
+        "key": "23944",
+        "quantity": "voltage",
+        "phase": "L1",
+        "aggregation": "cnt",
+        "unit": "V",
+    }
+    assert any("aggregation 'cnt' not canonical" in e for e in _column_errors(entry))
+
+
+def test_long_shape_requires_record_interpretation_fields() -> None:
+    """A long source cannot be interpreted without key/value/timestamp fields."""
+    schema = {
+        "shape": "long",
+        "fields": [{"name": "measurement_id", "type": "long"}],
+        "record": {"key_field": "measurement_id"},
+    }
+    errors = _source_errors(schema)
+    assert any("requires record.value_field" in e for e in errors)
+    assert any("requires record.timestamp_field" in e for e in errors)

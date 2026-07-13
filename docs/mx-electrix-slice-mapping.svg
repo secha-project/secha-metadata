@@ -43,14 +43,14 @@
 <text class="th" x="40" y="232">2 · /measurements/  →  measurement (fact): wide record unpivots to long rows</text>
 
 <g class="c-gray"><rect x="40" y="246" width="600" height="66" rx="6" stroke-width="0.5"/></g>
-<text class="t"  x="54" y="266">MX Electrix /measurements/ — 1 wide record (~240 columns)</text>
+<text class="t"  x="54" y="266">MX Electrix /measurements/: 1 wide record (~240 columns)</text>
 <text class="ts" x="54" y="286">timestamp: 2025-05-21T00:00:00   fhz: 50.0   ul1v: 236.16   dl1: 0.89</text>
 <text class="ts" x="54" y="302">u2u1: 0.17   u0u1: 0.19   u3l1: 0.8   …</text>
 
 <line class="arr" x1="340" y1="312" x2="340" y2="346" marker-end="url(#arrow)"/>
 <text class="ts" x="352" y="332" text-anchor="start">unpivot ↓  1 row per measured quantity</text>
 
-<text class="t" x="40" y="340">measurement — canonical fact (long)</text>
+<text class="t" x="40" y="340">measurement: canonical fact (long)</text>
 
 <g class="c-blue"><rect x="40" y="350" width="600" height="26" rx="4" stroke-width="0.5"/></g>
 <text class="th" x="50"  y="368">from (src)</text>

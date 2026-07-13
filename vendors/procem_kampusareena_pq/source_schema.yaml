@@ -1,0 +1,52 @@
+# --- header stub (onboarding/audit only; NOT a data-contract framework) ---
+vendor: procem_kampusareena_pq
+source: daily_dump
+owner: "ProCem/ProCemPlus platform (TAU), maintained by Ville Heikkila"
+contact: "ville.heikkila@tuni.fi"
+sensitivity: project-internal             # catalog rows carry no confidential flag for this device
+refresh_cadence: daily                    # one 7z archive per LOCAL (Europe/Helsinki) day
+source_schema_version: "Procem_IDs_v1.2"  # the catalog version these mappings were curated from
+
+# The raw is a whole-platform daily dump (~130M rows/day); this vendor config covers the
+# EV charging station meter LV3_EVCharging_* (a Laatuvahti 3), rtl_ids 23501-23949, 1 Hz.
+# Ingestion lands only that declared id subset (line selection, bytes untouched).
+
+# --- shape: every data row is one (key, value, timestamp) triple; semantics come from
+#     the catalog via mapping.rows, keyed on the VALUE of record.key_field -------------
+shape: long
+
+# --- format / access descriptor (how to READ + PARSE the raw) ---
+format:
+  type: csv
+  delimiter: "\t"                         # tab-separated
+  header: false                           # bare triples, no header line
+  encoding: utf-8
+  decimal_separator: "."
+  datetime_format: epoch_ms               # epoch milliseconds, UTC instants
+
+access:
+  landing_root_env: SECHA_LANDING_ROOT
+  layout: "vendor=procem_kampusareena_pq/source=daily_dump/date={date}"
+  partition_keys: [date]
+  snapshot_selection: latest_by_fetched_at
+  # NOTE: {date} is the archive's LOCAL Helsinki day (provenance); canonical event_date
+  # derives from ts_utc and legitimately differs near midnight (verified in the raw).
+
+# --- record-level interpretation (how the engine reads each record) ---
+record:
+  key_field: measurement_id               # rtl_id; selects the mapping.rows entry
+  value_field: value
+  timestamp_field: timestamp
+  row_id_field: measurement_id            # provenance: which source variable produced the row
+  device_id_template: "procem:kampusareena:evcharging"   # one device family per mapping
+
+# --- source-level canonical defaults for this 1 Hz stream ---
+defaults:
+  aggregation: average                    # Laatuvahti reports interval aggregates; confirm
+  interval_s: 1
+
+# --- logical fields (the raw triple; names follow the legacy platform convention) ---
+fields:
+  - {name: measurement_id, type: long,   nullable: false, desc: "rtl_id: catalog key identifying the measured variable"}
+  - {name: value,          type: string, nullable: false, desc: "measured value as a decimal string; catalog datatype governs parsing"}
+  - {name: timestamp,      type: long,   nullable: false, desc: "measurement instant, epoch milliseconds (UTC)"}

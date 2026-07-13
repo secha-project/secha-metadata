@@ -12,6 +12,7 @@
     "sensitivity": { "type": "string" },
     "refresh_cadence": { "type": "string" },
     "source_schema_version": { "type": "string" },
+    "shape": { "enum": ["wide", "long"] },
     "format": {
       "type": "object",
       "required": ["type", "encoding"],
@@ -20,6 +21,8 @@
         "type": { "enum": ["json", "csv", "parquet", "xml"] },
         "record_path": { "type": "string" },
         "encoding": { "type": "string" },
+        "delimiter": { "type": "string" },
+        "header": { "type": "boolean" },
         "decimal_separator": { "type": "string" },
         "datetime_format": { "type": "string" }
       }
@@ -42,6 +45,8 @@
         "meter_field": { "type": "string" },
         "timestamp_field": { "type": "string" },
         "row_id_field": { "type": "string" },
+        "key_field": { "type": "string" },
+        "value_field": { "type": "string" },
         "device_id_template": { "type": "string" }
       }
     },

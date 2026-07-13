@@ -1,0 +1,110 @@
+# =============================================================================
+# LAV mapping: ProCem Kampusareena EV-charging-station PQ meter -> secha.canonical
+# Long source: each raw row is (measurement_id, value, timestamp); the `rows:` table
+# below is keyed on the VALUE of record.key_field (the rtl_id), the long-shape
+# counterpart of wide `columns:`. `desc` carries the catalog point name verbatim
+# (Procem_IDs_v1.2.csv) so lineage stays audit-ready.
+#
+# Slice scope: 71 of the 179 LV3_EVCharging_* variables, mirroring + extending the
+# MX Electrix slice. Deliberately out of slice (additive later, config-only):
+# harmonic orders 2,4,6,8-20 (U*, ids 23541-23659), harmonic currents I2-I20
+# (23691-23809), DC voltages Udc* (23842-23855).
+# Values are engineering units as stored - no device scaling factors (unlike Electrix).
+# =============================================================================
+vendor: procem_kampusareena_pq
+mapping_version: "1.0.0"
+target_schema_version: "1.0.0"
+source: daily_dump
+
+rows:
+  # --- frequency ---------------------------------------------------------------
+  - {key: "23501", quantity: frequency, phase: none, unit: Hz, desc: "LV3_EVCharging_Freq"}
+
+  # --- voltages: phase-to-neutral, line-to-line, fundamental component ----------
+  - {key: "23524", quantity: voltage, phase: L1, unit: V, desc: "LV3_EVCharging_UL1"}
+  - {key: "23525", quantity: voltage, phase: L2, unit: V, desc: "LV3_EVCharging_UL2"}
+  - {key: "23526", quantity: voltage, phase: L3, unit: V, desc: "LV3_EVCharging_UL3"}
+  - {key: "23527", quantity: voltage, phase: L1_L2, unit: V, desc: "LV3_EVCharging_U12"}
+  - {key: "23528", quantity: voltage, phase: L2_L3, unit: V, desc: "LV3_EVCharging_U23"}
+  - {key: "23529", quantity: voltage, phase: L3_L1, unit: V, desc: "LV3_EVCharging_U31"}
+  - {key: "23540", quantity: voltage, phase: L1, variant: fundamental, unit: V, desc: "LV3_EVCharging_U1L1"}
+  - {key: "23590", quantity: voltage, phase: L2, variant: fundamental, unit: V, desc: "LV3_EVCharging_U1L2"}
+  - {key: "23640", quantity: voltage, phase: L3, variant: fundamental, unit: V, desc: "LV3_EVCharging_U1L3"}
+
+  # --- currents: phases, neutral, fundamental component -------------------------
+  - {key: "23530", quantity: current, phase: L1, unit: A, desc: "LV3_EVCharging_IL1"}
+  - {key: "23531", quantity: current, phase: L2, unit: A, desc: "LV3_EVCharging_IL2"}
+  - {key: "23532", quantity: current, phase: L3, unit: A, desc: "LV3_EVCharging_IL3"}
+  - {key: "23533", quantity: current, phase: N, unit: A, desc: "LV3_EVCharging_IN"}
+  - {key: "23690", quantity: current, phase: L1, variant: fundamental, unit: A, desc: "LV3_EVCharging_I1L1"}
+  - {key: "23740", quantity: current, phase: L2, variant: fundamental, unit: A, desc: "LV3_EVCharging_I1L2"}
+  - {key: "23790", quantity: current, phase: L3, variant: fundamental, unit: A, desc: "LV3_EVCharging_I1L3"}
+
+  # --- active power: 3-phase total, per phase, fundamental ----------------------
+  - {key: "23503", quantity: active_power, phase: three_phase, unit: W, desc: "LV3_EVCharging_P"}
+  - {key: "23505", quantity: active_power, phase: L1, unit: W, desc: "LV3_EVCharging_PL1"}
+  - {key: "23506", quantity: active_power, phase: L2, unit: W, desc: "LV3_EVCharging_PL2"}
+  - {key: "23507", quantity: active_power, phase: L3, unit: W, desc: "LV3_EVCharging_PL3"}
+  - {key: "23508", quantity: active_power, phase: L1, variant: fundamental, unit: W, desc: "LV3_EVCharging_P1L1"}
+  - {key: "23509", quantity: active_power, phase: L2, variant: fundamental, unit: W, desc: "LV3_EVCharging_P1L2"}
+  - {key: "23510", quantity: active_power, phase: L3, variant: fundamental, unit: W, desc: "LV3_EVCharging_P1L3"}
+
+  # --- reactive power: the variant dimension earns its keep (IEEE 1459) ---------
+  # Fryze definition (Qf*) vs fundamental definition (Q1*): same quantity, distinct variant.
+  - {key: "23502", quantity: reactive_power, phase: three_phase, variant: fryze, unit: var, desc: "LV3_EVCharging_Qf"}
+  - {key: "23511", quantity: reactive_power, phase: L1, variant: fryze, unit: var, desc: "LV3_EVCharging_QfL1"}
+  - {key: "23512", quantity: reactive_power, phase: L2, variant: fryze, unit: var, desc: "LV3_EVCharging_QfL2"}
+  - {key: "23513", quantity: reactive_power, phase: L3, variant: fryze, unit: var, desc: "LV3_EVCharging_QfL3"}
+  - {key: "23504", quantity: reactive_power, phase: three_phase, variant: fundamental, unit: var, desc: "LV3_EVCharging_Q1"}
+  - {key: "23514", quantity: reactive_power, phase: L1, variant: fundamental, unit: var, desc: "LV3_EVCharging_Q1L1"}
+  - {key: "23515", quantity: reactive_power, phase: L2, variant: fundamental, unit: var, desc: "LV3_EVCharging_Q1L2"}
+  - {key: "23516", quantity: reactive_power, phase: L3, variant: fundamental, unit: var, desc: "LV3_EVCharging_Q1L3"}
+
+  # --- apparent power ------------------------------------------------------------
+  - {key: "23517", quantity: apparent_power, phase: three_phase, unit: VA, desc: "LV3_EVCharging_S"}
+  - {key: "23518", quantity: apparent_power, phase: L1, unit: VA, desc: "LV3_EVCharging_SL1"}
+  - {key: "23519", quantity: apparent_power, phase: L2, unit: VA, desc: "LV3_EVCharging_SL2"}
+  - {key: "23520", quantity: apparent_power, phase: L3, unit: VA, desc: "LV3_EVCharging_SL3"}
+  - {key: "23521", quantity: apparent_power, phase: L1, variant: fundamental, unit: VA, desc: "LV3_EVCharging_S1L1"}
+  - {key: "23522", quantity: apparent_power, phase: L2, variant: fundamental, unit: VA, desc: "LV3_EVCharging_S1L2"}
+  - {key: "23523", quantity: apparent_power, phase: L3, variant: fundamental, unit: VA, desc: "LV3_EVCharging_S1L3"}
+
+  # --- power factor: true (PF) and displacement (DPF) are distinct quantities ----
+  - {key: "23856", quantity: power_factor, phase: L1, unit: ratio, desc: "LV3_EVCharging_PFL1"}
+  - {key: "23857", quantity: power_factor, phase: L2, unit: ratio, desc: "LV3_EVCharging_PFL2"}
+  - {key: "23858", quantity: power_factor, phase: L3, unit: ratio, desc: "LV3_EVCharging_PFL3"}
+  - {key: "23859", quantity: displacement_power_factor, phase: L1, unit: ratio, desc: "LV3_EVCharging_DPFL1"}
+  - {key: "23860", quantity: displacement_power_factor, phase: L2, unit: ratio, desc: "LV3_EVCharging_DPFL2"}
+  - {key: "23861", quantity: displacement_power_factor, phase: L3, unit: ratio, desc: "LV3_EVCharging_DPFL3"}
+
+  # --- distortion + unbalance (IEC 61000-4-7 / 61000-4-30) -----------------------
+  - {key: "23534", quantity: thd_voltage, phase: L1, unit: percent, desc: "LV3_EVCharging_TDUL1"}
+  - {key: "23535", quantity: thd_voltage, phase: L2, unit: percent, desc: "LV3_EVCharging_TDUL2"}
+  - {key: "23536", quantity: thd_voltage, phase: L3, unit: percent, desc: "LV3_EVCharging_TDUL3"}
+  - {key: "23537", quantity: thd_current, phase: L1, unit: percent, desc: "LV3_EVCharging_TDIL1"}
+  - {key: "23538", quantity: thd_current, phase: L2, unit: percent, desc: "LV3_EVCharging_TDIL2"}
+  - {key: "23539", quantity: thd_current, phase: L3, unit: percent, desc: "LV3_EVCharging_TDIL3"}
+  - {key: "23840", quantity: voltage_unbalance_negative_seq, phase: none, unit: percent, desc: "LV3_EVCharging_U2U1"}
+  - {key: "23841", quantity: voltage_unbalance_zero_seq, phase: none, unit: percent, desc: "LV3_EVCharging_U0U1"}
+
+  # --- individual voltage harmonics 3/5/7 (mirrors the Electrix slice orders) ----
+  # In this long source each (order, phase) is its own rtl_id, so harmonics are
+  # explicit rows carrying harmonic_order (wide sources use `generated` patterns).
+  - {key: "23542", quantity: harmonic_voltage, phase: L1, harmonic_order: 3, unit: percent, desc: "LV3_EVCharging_U3L1"}
+  - {key: "23544", quantity: harmonic_voltage, phase: L1, harmonic_order: 5, unit: percent, desc: "LV3_EVCharging_U5L1"}
+  - {key: "23546", quantity: harmonic_voltage, phase: L1, harmonic_order: 7, unit: percent, desc: "LV3_EVCharging_U7L1"}
+  - {key: "23592", quantity: harmonic_voltage, phase: L2, harmonic_order: 3, unit: percent, desc: "LV3_EVCharging_U3L2"}
+  - {key: "23594", quantity: harmonic_voltage, phase: L2, harmonic_order: 5, unit: percent, desc: "LV3_EVCharging_U5L2"}
+  - {key: "23596", quantity: harmonic_voltage, phase: L2, harmonic_order: 7, unit: percent, desc: "LV3_EVCharging_U7L2"}
+  - {key: "23642", quantity: harmonic_voltage, phase: L3, harmonic_order: 3, unit: percent, desc: "LV3_EVCharging_U3L3"}
+  - {key: "23644", quantity: harmonic_voltage, phase: L3, harmonic_order: 5, unit: percent, desc: "LV3_EVCharging_U5L3"}
+  - {key: "23646", quantity: harmonic_voltage, phase: L3, harmonic_order: 7, unit: percent, desc: "LV3_EVCharging_U7L3"}
+
+  # --- cumulative energy counters: per-row aggregation override (counter) --------
+  # Import/export pairs; the two reactive definitions stay distinct via variant.
+  - {key: "23944", quantity: energy_active_import, phase: none, aggregation: counter, unit: kWh, desc: "LV3_EVCharging_EP_plus"}
+  - {key: "23945", quantity: energy_active_export, phase: none, aggregation: counter, unit: kWh, desc: "LV3_EVCharging_EP_minus"}
+  - {key: "23946", quantity: energy_reactive_import, phase: none, variant: fryze, aggregation: counter, unit: kvarh, desc: "LV3_EVCharging_EQf_plus"}
+  - {key: "23947", quantity: energy_reactive_export, phase: none, variant: fryze, aggregation: counter, unit: kvarh, desc: "LV3_EVCharging_EQf_minus"}
+  - {key: "23948", quantity: energy_reactive_import, phase: none, variant: fundamental, aggregation: counter, unit: kvarh, desc: "LV3_EVCharging_EQ1_plus"}
+  - {key: "23949", quantity: energy_reactive_export, phase: none, variant: fundamental, aggregation: counter, unit: kvarh, desc: "LV3_EVCharging_EQ1_minus"}

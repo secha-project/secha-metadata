@@ -1,0 +1,45 @@
+[
+  {"source_vendor": "procem_kampusareena_pq", "source_dataset": "daily_dump", "device_id": "procem:kampusareena:evcharging",
+   "ts_utc": "2026-06-14T21:00:00.246Z", "quantity": "frequency", "phase": "none", "variant": "none",
+   "value": 49.987724, "unit": "Hz", "aggregation": "average", "interval_s": 1, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "procem_kampusareena_pq", "source_dataset": "daily_dump", "device_id": "procem:kampusareena:evcharging",
+   "ts_utc": "2026-06-14T21:00:00.246Z", "quantity": "reactive_power", "phase": "three_phase", "variant": "fryze",
+   "value": -45.110664, "unit": "var", "aggregation": "average", "interval_s": 1, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "procem_kampusareena_pq", "source_dataset": "daily_dump", "device_id": "procem:kampusareena:evcharging",
+   "ts_utc": "2026-06-14T21:00:00.246Z", "quantity": "reactive_power", "phase": "L1", "variant": "fundamental",
+   "value": -20.850676, "unit": "var", "aggregation": "average", "interval_s": 1, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "procem_kampusareena_pq", "source_dataset": "daily_dump", "device_id": "procem:kampusareena:evcharging",
+   "ts_utc": "2026-06-14T21:00:00.246Z", "quantity": "voltage", "phase": "L1", "variant": "none",
+   "value": 234.57077, "unit": "V", "aggregation": "average", "interval_s": 1, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "procem_kampusareena_pq", "source_dataset": "daily_dump", "device_id": "procem:kampusareena:evcharging",
+   "ts_utc": "2026-06-14T21:00:00.246Z", "quantity": "voltage", "phase": "L1_L2", "variant": "none",
+   "value": 404.942535, "unit": "V", "aggregation": "average", "interval_s": 1, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "procem_kampusareena_pq", "source_dataset": "daily_dump", "device_id": "procem:kampusareena:evcharging",
+   "ts_utc": "2026-06-14T21:00:00.246Z", "quantity": "current", "phase": "N", "variant": "none",
+   "value": 1.818517, "unit": "A", "aggregation": "average", "interval_s": 1, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "procem_kampusareena_pq", "source_dataset": "daily_dump", "device_id": "procem:kampusareena:evcharging",
+   "ts_utc": "2026-06-14T21:00:00.246Z", "quantity": "thd_voltage", "phase": "L1", "variant": "none",
+   "value": 0.989969, "unit": "percent", "aggregation": "average", "interval_s": 1, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "procem_kampusareena_pq", "source_dataset": "daily_dump", "device_id": "procem:kampusareena:evcharging",
+   "ts_utc": "2026-06-14T21:00:00.246Z", "quantity": "harmonic_voltage", "phase": "L1", "variant": "none", "harmonic_order": 3,
+   "value": 0.37578, "unit": "percent", "aggregation": "average", "interval_s": 1, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "procem_kampusareena_pq", "source_dataset": "daily_dump", "device_id": "procem:kampusareena:evcharging",
+   "ts_utc": "2026-06-14T21:00:00.246Z", "quantity": "voltage_unbalance_negative_seq", "phase": "none", "variant": "none",
+   "value": 0.320132, "unit": "percent", "aggregation": "average", "interval_s": 1, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "procem_kampusareena_pq", "source_dataset": "daily_dump", "device_id": "procem:kampusareena:evcharging",
+   "ts_utc": "2026-06-14T21:00:00.246Z", "quantity": "power_factor", "phase": "L1", "variant": "none",
+   "value": 0.514594, "unit": "ratio", "aggregation": "average", "interval_s": 1, "quality": "ok", "schema_version": "1.0.0"},
+
+  {"source_vendor": "procem_kampusareena_pq", "source_dataset": "daily_dump", "device_id": "procem:kampusareena:evcharging",
+   "ts_utc": "2026-06-14T21:00:00.246Z", "quantity": "energy_active_import", "phase": "none", "variant": "none",
+   "value": 36349.897, "unit": "kWh", "aggregation": "counter", "interval_s": 1, "quality": "ok", "schema_version": "1.0.0"}
+]

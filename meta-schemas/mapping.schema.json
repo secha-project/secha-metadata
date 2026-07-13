@@ -2,7 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "secha mapping config",
   "type": "object",
-  "required": ["vendor", "mapping_version", "target_schema_version", "source", "columns"],
+  "required": ["vendor", "mapping_version", "target_schema_version", "source"],
+  "anyOf": [{ "required": ["columns"] }, { "required": ["rows"] }],
   "additionalProperties": false,
   "properties": {
     "vendor": { "type": "string" },
@@ -10,7 +11,8 @@
     "target_schema_version": { "type": "string" },
     "source": { "type": "string" },
     "columns": { "type": "array", "items": { "$ref": "#/$defs/column" } },
-    "generated": { "type": "array", "items": { "$ref": "#/$defs/generated" } }
+    "generated": { "type": "array", "items": { "$ref": "#/$defs/generated" } },
+    "rows": { "type": "array", "items": { "$ref": "#/$defs/row" } }
   },
   "$defs": {
     "column": {
@@ -37,6 +39,23 @@
         "unit": { "type": "string" },
         "order": { "type": "array", "items": { "type": "integer" } },
         "phase_map": { "type": "object" }
+      }
+    },
+    "row": {
+      "type": "object",
+      "required": ["key", "quantity", "phase", "unit"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string" },
+        "quantity": { "type": "string" },
+        "phase": { "type": "string" },
+        "unit": { "type": "string" },
+        "variant": { "type": "string" },
+        "harmonic_order": { "type": "integer", "minimum": 2 },
+        "aggregation": { "type": "string" },
+        "transform": { "type": "string" },
+        "args": { "type": "object" },
+        "desc": { "type": "string" }
       }
     }
   }

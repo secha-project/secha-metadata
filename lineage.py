@@ -72,15 +72,32 @@ def _rows(vendor_dir: Path, vocab: dict) -> tuple[dict, list[tuple[str, ...]]]:
                         std,
                     )
                 )
+    # long-shape mappings: entries are keyed by field value (e.g. rtl_id); the entry's
+    # own `desc` carries the catalog point name, since source fields are just the triple
+    for row in mapping.get("rows", []):
+        quantity = row["quantity"]
+        if row.get("harmonic_order") is not None:
+            quantity = f"{quantity} (order {row['harmonic_order']})"
+        rows.append(
+            (
+                f"rtl {row['key']}",
+                row.get("desc", ""),
+                quantity,
+                row["phase"],
+                row["unit"],
+                _transform_str(row),
+                _std_ref(vocab, row["quantity"]),
+            )
+        )
     return mapping, rows
 
 
 def _render(vendor: str, mapping: dict, rows: list[tuple[str, ...]]) -> str:
     lines = [
-        f"# Lineage — {vendor}",
+        f"# Lineage: {vendor}",
         "",
         f"Source `{mapping.get('source')}` · mapping_version `{mapping.get('mapping_version')}`.",
-        "Generated from `secha-metadata` configs by `lineage.py` — **do not edit by hand**.",
+        "Generated from `secha-metadata` configs by `lineage.py`. **Do not edit by hand.**",
         "",
         HEADER,
         SEP,
@@ -115,7 +132,8 @@ def main(argv: list[str]) -> int:
             if current != content:
                 stale.append(vendor)
         else:
-            path.write_text(content, encoding="utf-8")
+            # LF pinned: generated docs are byte-identical on Windows and Linux CI
+            path.write_text(content, encoding="utf-8", newline="\n")
     if check and stale:
         print("STALE lineage docs:", ", ".join(stale), "- run: python lineage.py")
         return 1

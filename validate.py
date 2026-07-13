@@ -4,9 +4,11 @@ Three layers:
 1. JSON-Schema conformance of every config against its meta-schema.
 2. Cross-file referential integrity: quantities/phases/units/transforms exist; mapping
    src fields exist in the source schema; transform args are complete AND known; scale
-   factor fields exist in device_factors; harmonic quantities only via generated rules;
+   factor fields exist in device_factors; harmonic quantities carry harmonic_order
+   (generated rules for wide sources, explicit rows entries for long ones); long-shape
+   `rows:` mappings are consistent with the declared source shape and record block;
    record/defaults blocks reference real fields; golden fixtures conform to the vocabulary.
-3. No-collapse: no two mapped columns share a canonical identity tuple.
+3. No-collapse: no two mapped columns/rows share a canonical identity tuple.
 
 Run directly (`python validate.py`) for CI, or via `pytest` (tests/ imports `validate`).
 """
@@ -53,14 +55,22 @@ def _check_column(
     if variant not in ctx["variants"]:
         errors.append(f"[xref] {label}: variant '{variant}' not a canonical variant")
 
-    # quantities that REQUIRE harmonic_order can only come from generated rules — a
-    # direct column has no way to set the order and would land rows with a null order
+    # quantities that REQUIRE harmonic_order must carry it: wide columns get it from
+    # generated rules; long `rows:` entries set it explicitly on the entry
     quantity_meta = ctx["quantities_meta"].get(col["quantity"]) or {}
-    if "harmonic_order" in (quantity_meta.get("requires") or []):
+    requires = quantity_meta.get("requires") or []
+    if "harmonic_order" in requires and col.get("harmonic_order") is None:
         errors.append(
             f"[xref] {label}: quantity '{col['quantity']}' requires harmonic_order; "
-            "map it via a generated rule, not a direct column"
+            "set it on the rows entry or map it via a generated rule"
         )
+    if col.get("harmonic_order") is not None and "harmonic_order" not in requires:
+        errors.append(
+            f"[xref] {label}: harmonic_order set but quantity '{col['quantity']}' does not use it"
+        )
+    aggregation = col.get("aggregation")
+    if aggregation is not None and aggregation not in ctx["aggregations"]:
+        errors.append(f"[xref] {label}: aggregation '{aggregation}' not canonical")
 
     transform = col.get("transform", "none")
     rule = ctx["rules"].get(transform)
@@ -100,10 +110,15 @@ def _check_source_blocks(source_schema: dict, ctx: dict, errors: list[str], labe
         errors.append(f"[xref] {label}: duplicate field names {sorted(duplicates)}")
 
     record = source_schema.get("record") or {}
-    for key in ("meter_field", "timestamp_field", "row_id_field"):
+    for key in ("meter_field", "timestamp_field", "row_id_field", "key_field", "value_field"):
         value = record.get(key)
         if value is not None and value not in field_names:
             errors.append(f"[xref] {label}: record.{key} '{value}' not in source_schema.fields")
+    if source_schema.get("shape") == "long":
+        # a long source cannot be interpreted without these three
+        for key in ("key_field", "value_field", "timestamp_field"):
+            if not record.get(key):
+                errors.append(f"[xref] {label}: shape 'long' requires record.{key}")
     template = record.get("device_id_template")
     if template is not None:
         for placeholder in re.findall(r"\{(\w+)\}", template):
@@ -123,18 +138,23 @@ def _check_source_blocks(source_schema: dict, ctx: dict, errors: list[str], labe
 
 
 def _check_no_collapse(mapping: dict, errors: list[str], label: str) -> None:
-    """No two mapped columns may share a canonical identity tuple.
+    """No two mapped columns/rows may share a canonical identity tuple.
 
-    Identity = (quantity, phase, variant, harmonic_order, aggregation); two columns sharing it
-    collapse into indistinguishable canonical rows. `aggregation` is not yet expressible per
-    column, so it is held at None here; add it to the key once the mapping schema supports it.
+    Identity = (quantity, phase, variant, harmonic_order, aggregation); two entries sharing it
+    collapse into indistinguishable canonical rows. Wide columns cannot yet express a per-column
+    aggregation (held at None); long `rows:` entries contribute their override.
     """
     seen: dict[tuple, list[str]] = {}
 
     def record(
-        src: str, quantity: str, phase: str, variant: str, harmonic_order: int | None
+        src: str,
+        quantity: str,
+        phase: str,
+        variant: str,
+        harmonic_order: int | None,
+        aggregation: str | None = None,
     ) -> None:
-        key = (quantity, phase, variant, harmonic_order, None)
+        key = (quantity, phase, variant, harmonic_order, aggregation)
         seen.setdefault(key, []).append(src)
 
     for col in mapping.get("columns", []):
@@ -145,6 +165,15 @@ def _check_no_collapse(mapping: dict, errors: list[str], label: str) -> None:
                 record(
                     gen["pattern"].format(order=order, p=idx), gen["quantity"], phase, "none", order
                 )
+    for row in mapping.get("rows", []):
+        record(
+            f"rtl:{row['key']}",
+            row["quantity"],
+            row["phase"],
+            row.get("variant", "none"),
+            row.get("harmonic_order"),
+            row.get("aggregation"),
+        )
 
     for (quantity, phase, variant, harmonic_order, _agg), sources in seen.items():
         if len(sources) > 1:
@@ -235,6 +264,20 @@ def validate() -> list[str]:
                 errors.append(
                     f"[xref] {name}/mapping: src '{col['src']}' not in source_schema.fields"
                 )
+
+        # long-shape `rows:` entries share the column checks; keyed by field VALUE, so
+        # there is no field-name xref; instead shape/record consistency is enforced
+        shape = source_schema.get("shape", "wide")
+        if mapping.get("rows") and shape != "long":
+            errors.append(
+                f"[xref] {name}/mapping: 'rows' mapping requires source_schema shape 'long'"
+            )
+        if mapping.get("columns") and shape == "long":
+            errors.append(f"[xref] {name}/mapping: long sources map via 'rows', not 'columns'")
+        for row_map in mapping.get("rows", []):
+            _check_column(
+                row_map, ctx, factor_fields, errors, f"{name}/mapping[rtl {row_map.get('key')}]"
+            )
 
         for gen in mapping.get("generated", []):
             if gen["quantity"] not in ctx["quantities"]:

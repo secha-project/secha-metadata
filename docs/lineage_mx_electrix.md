@@ -1,7 +1,7 @@
-# Lineage — mx_electrix
+# Lineage: mx_electrix
 
 Source `measurements` · mapping_version `1.1.0`.
-Generated from `secha-metadata` configs by `lineage.py` — **do not edit by hand**.
+Generated from `secha-metadata` configs by `lineage.py`. **Do not edit by hand.**
 
 | Source field | Meaning (vendor) | Canonical quantity | Phase | Unit | Transform | Standard |
 |---|---|---|---|---|---|---|

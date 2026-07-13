@@ -1,0 +1,14 @@
+# Declarative validation for the ProCem Kampusareena EV-charging PQ stream.
+# Same rule library as every vendor; the engine applies these (flag/drop/reject, counted).
+vendor: procem_kampusareena_pq
+rules:
+  # a triple without its key or instant is unusable
+  - {field: measurement_id, type: not_null, on_fail: reject_row}
+  - {field: timestamp,      type: not_null, on_fail: reject_row}
+  # a missing value cell drops that row only (satisfied by construction in the engine)
+  - {entity: measurement, field: value, type: not_null, on_fail: drop_row}
+  # physical plausibility (same thresholds as mx_electrix -> comparable quality flags)
+  - {quantity: frequency,                 type: range, min: 45, max: 65,   on_fail: flag_suspect}
+  - {quantity: voltage,                   type: range, min: 0,  max: 1000, on_fail: flag_suspect}
+  - {quantity: power_factor,              type: range, min: -1, max: 1,    on_fail: flag_suspect}
+  - {quantity: displacement_power_factor, type: range, min: -1, max: 1,    on_fail: flag_suspect}
