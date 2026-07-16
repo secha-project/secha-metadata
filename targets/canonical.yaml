@@ -15,6 +15,27 @@ measurement_id_from:                   # deterministic surrogate (idempotency); 
 partition_by: [source_vendor, event_date]
 # cluster_by: [source_vendor, device_id, ts_utc]   # Databricks liquid clustering (deferred)
 
+# Platform conformance (learned via the Phase-3 handshake, 2026-07-14): this Unity Catalog
+# (0.4, managed tables enabled) REJECTS managed-table creation without the catalog-managed
+# Delta feature. The sink's generated DDL always includes these properties.
+table_properties:
+  delta.feature.catalogManaged: supported
+
+# Phase-1 -> Phase-3 hand-off: canonical parquet is staged on the cluster-visible NFS and
+# MERGEd from there (Spark workers cannot read a laptop; see secha-transform scripts/phase3).
+# The env var carries the path, e.g. /net/nfs/data/secha/canonical-staging
+staging:
+  root_env: SECHA_STAGING_ROOT
+
+# Wide serving views, config-as-code: each serving/<name>.sql holds ONE SELECT over the
+# canonical fact (referenced as {canonical}); the sink wraps it per serving_mode.
+# serving_mode (platform fact, learned 2026-07-15): this Unity Catalog Spark connector
+# (0.4.0) has no view ability (MISSING_CATALOG_ABILITY.VIEWS), so serving definitions are
+# materialised as Delta TABLES (refreshed by `secha-transform delta-views`). Flip to
+# `view` once the connector supports views; the serving/*.sql definitions do not change.
+serving_schema: serving
+serving_mode: table
+
 dimensions:
   device:           {schema: canonical, table: device,           merge_key: [device_id]}
   location:         {schema: canonical, table: location,         merge_key: [location_id]}

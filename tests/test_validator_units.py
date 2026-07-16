@@ -1,6 +1,8 @@
-"""Unit tests for the validator's cross-reference guards (synthetic configs, no disk)."""
+"""Unit tests for the validator's cross-reference guards (synthetic configs)."""
 
-from validate import _check_column, _check_source_blocks
+from pathlib import Path
+
+from validate import _check_column, _check_serving_views, _check_source_blocks
 
 CTX = {
     "quantities": {"voltage", "harmonic_voltage"},
@@ -153,3 +155,49 @@ def test_long_shape_requires_record_interpretation_fields() -> None:
     errors = _source_errors(schema)
     assert any("requires record.value_field" in e for e in errors)
     assert any("requires record.timestamp_field" in e for e in errors)
+
+
+# --- serving-view guards ----------------------------------------------------------------
+
+
+def _serving_errors(tmp_path: Path, body: str, target: dict | None = None) -> list[str]:
+    (tmp_path / "view_under_test.sql").write_text(body, encoding="utf-8")
+    errors: list[str] = []
+    if target is None:  # an empty dict is a meaningful target here, so no `or` default
+        target = {"serving_schema": "serving"}
+    _check_serving_views(tmp_path, target, errors)
+    return errors
+
+
+def test_valid_serving_view_passes(tmp_path: Path) -> None:
+    body = "-- comment\nSELECT device_id, avg(value) FROM {canonical} GROUP BY device_id\n"
+    assert _serving_errors(tmp_path, body) == []
+
+
+def test_empty_serving_view_is_caught(tmp_path: Path) -> None:
+    assert any("empty view body" in e for e in _serving_errors(tmp_path, "-- only comments\n"))
+
+
+def test_non_select_serving_view_is_caught(tmp_path: Path) -> None:
+    """DDL/DML hiding in a view file must never reach the platform."""
+    errors = _serving_errors(tmp_path, "DROP TABLE {canonical}")
+    assert any("must be a single SELECT" in e for e in errors)
+
+
+def test_hardcoded_table_path_is_caught(tmp_path: Path) -> None:
+    """Views must go through the {canonical} placeholder, staying platform-portable."""
+    errors = _serving_errors(tmp_path, "SELECT * FROM secha.canonical.measurement")
+    assert any("{canonical} placeholder" in e for e in errors)
+
+
+def test_serving_views_require_serving_schema(tmp_path: Path) -> None:
+    body = "SELECT * FROM {canonical}"
+    errors = _serving_errors(tmp_path, body, target={})
+    assert any("no serving_schema" in e for e in errors)
+
+
+def test_unknown_serving_mode_is_caught(tmp_path: Path) -> None:
+    body = "SELECT * FROM {canonical}"
+    target = {"serving_schema": "serving", "serving_mode": "materialized"}
+    errors = _serving_errors(tmp_path, body, target=target)
+    assert any("unknown serving_mode" in e for e in errors)

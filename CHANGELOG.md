@@ -5,6 +5,21 @@ Repository-level changes to `secha-metadata`. Per-vendor mapping changes are log
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added (Phase 3, Step 1: platform binding + serving views)
+- `targets/canonical.yaml` gained the facts the Phase-3 platform handshake verified:
+  `table_properties` with `delta.feature.catalogManaged: supported` (this Unity Catalog
+  rejects managed tables without it; the sink's generated DDL always includes it),
+  a `staging` declaration (`SECHA_STAGING_ROOT`, the cluster-visible NFS hand-off), and
+  `serving_schema: serving`.
+- **Serving views as config**: new `serving/` folder; each `<name>.sql` holds one SELECT over
+  the `{canonical}` placeholder and is wrapped by the sink as `CREATE OR REPLACE VIEW`.
+  First view: `pq_minute_wide` (minute-level wide PQ overview per device, all vendors,
+  `quality = 'ok'` only).
+- Validator guards for serving views (empty body, hidden DDL/DML, hardcoded table paths,
+  missing serving_schema, unknown serving_mode), each pinned by a unit test.
+- `serving_mode: table` in the target binding (platform fact: this UC Spark connector has
+  neither view ability nor RTAS; serving definitions are materialised as Delta snapshots,
+  flip to `view` when the connector matures; the serving/*.sql bodies never change).
 ### Added (vendor #2: ProCem)
 - **Second vendor onboarded as pure config**, `vendors/procem_kampusareena_pq/`: the Kampusareena
   EV-charging-station PQ meter (ProCem platform, long-format 1 Hz triples, catalog-keyed semantics).

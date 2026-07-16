@@ -10,6 +10,9 @@ Three layers:
    record/defaults blocks reference real fields; golden fixtures conform to the vocabulary.
 3. No-collapse: no two mapped columns/rows share a canonical identity tuple.
 
+Plus serving-view guards: each serving/<name>.sql must be a single SELECT/WITH over the
+{canonical} placeholder (no hidden DDL/DML, no hardcoded table paths).
+
 Run directly (`python validate.py`) for CI, or via `pytest` (tests/ imports `validate`).
 """
 
@@ -184,6 +187,40 @@ def _check_no_collapse(mapping: dict, errors: list[str], label: str) -> None:
             )
 
 
+def _check_serving_views(serving_dir: Path, target: dict, errors: list[str]) -> None:
+    """Serving views are config too: one SELECT over {canonical}, nothing else.
+
+    A view file that is empty, contains DDL/DML, or hardcodes a table path would
+    either break the sink or silently bypass the canonical fact. Guarded here.
+    """
+    if not serving_dir.is_dir():
+        return
+    view_paths = sorted(serving_dir.glob("*.sql"))
+    if view_paths and not target.get("serving_schema"):
+        errors.append("[serving] targets/canonical.yaml: serving views exist but no serving_schema")
+    serving_mode = target.get("serving_mode", "view")
+    if serving_mode not in ("view", "table"):
+        errors.append(f"[serving] targets/canonical.yaml: unknown serving_mode '{serving_mode}'")
+    for path in view_paths:
+        label = f"serving/{path.name}"
+        lines = path.read_text(encoding="utf-8").splitlines()
+        statement = "\n".join(line for line in lines if not line.strip().startswith("--")).strip()
+        if not statement:
+            errors.append(f"[serving] {label}: empty view body")
+            continue
+        first_word = statement.split(None, 1)[0].upper()
+        if first_word not in ("SELECT", "WITH"):
+            errors.append(
+                f"[serving] {label}: view body must be a single SELECT/WITH query "
+                f"(found '{first_word}')"
+            )
+        if "{canonical}" not in statement:
+            errors.append(
+                f"[serving] {label}: must reference the fact table via the "
+                "{canonical} placeholder (no hardcoded table paths)"
+            )
+
+
 def _check_canonical_row(row: dict, ctx: dict, errors: list[str], label: str) -> None:
     required = [
         "source_vendor",
@@ -237,6 +274,8 @@ def validate() -> list[str]:
     for name, cfg in (target.get("dimensions") or {}).items():
         if cfg["table"] not in entities:
             errors.append(f"[target] dimension '{name}' -> unknown entity '{cfg['table']}'")
+
+    _check_serving_views(ROOT / "serving", target, errors)
 
     meta = ROOT / "meta-schemas"
     for vendor_dir in sorted((ROOT / "vendors").iterdir()):

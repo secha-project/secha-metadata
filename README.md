@@ -27,11 +27,13 @@ secha-transform  →  reads raw + rulebook → canonical data (Delta / UC)  ← 
 ```
 canonical/      target model: canonical_schema.yaml + quantity_vocabulary.yaml + units.yaml
 transforms/     library.yaml, the typed transformation-rule registry
-targets/        canonical.yaml, the shared sink binding (catalog.schema.table, merge key, partitions)
+targets/        canonical.yaml, the shared sink binding (catalog.schema.table, merge key,
+                partitions, table properties, staging, serving schema)
+serving/        wide serving views as config: one SELECT per <name>.sql over {canonical}
 meta-schemas/   JSON Schemas that validate the configs themselves
 vendors/<v>/    source_schema.yaml + mapping.yaml + validation.yaml + CHANGELOG.md
 tests/          fixtures (golden) + config-validity + lineage-drift tests
-validate.py     schema + cross-reference + no-collapse linter
+validate.py     schema + cross-reference + no-collapse + serving-view linter
 lineage.py      generates docs/lineage_<vendor>.md from the configs
 docs/           architecture diagrams + generated lineage reports + the onboarding diary
 ```
@@ -45,7 +47,8 @@ docs/           architecture diagrams + generated lineage reports + the onboardi
 | Transformation rules | `transforms/library.yaml` | **typed** (parameter signatures) |
 | Validation rules | `vendors/<v>/validation.yaml` | row-level only (scope) |
 | Schema versions | `mapping_version` + `vendors/<v>/CHANGELOG.md` | compatibility policy below |
-| Target/sink binding | `targets/canonical.yaml` | shared, not per-vendor |
+| Target/sink binding | `targets/canonical.yaml` | shared, not per-vendor; incl. platform table properties + staging |
+| Serving views | `serving/<name>.sql` | one SELECT over `{canonical}`; materialised per the target's `serving_mode` (view, or Delta snapshot) |
 
 ## How the two vendor shapes map
 
@@ -83,6 +86,10 @@ unbalance, energy counters) required **zero** vocabulary or unit-registry change
    known; golden rows conform to the vocabulary.
 3. **No-collapse.** No two mapped columns/rows share a canonical identity tuple
    `(quantity, phase, variant, harmonic_order, aggregation)`, so nothing silently merges.
+
+Serving views get the same treatment: a view file must be a single SELECT/WITH (no DDL/DML can
+hide in one) and must reference the fact table through the `{canonical}` placeholder, so views
+stay platform-portable and always read the canonical fact.
 
 A malformed, dangling, or colliding config **cannot merge**, which is exactly what lets the future LLM
 authoring assistant propose configs safely (a human just approves the PR). `lineage.py --check` keeps the
@@ -136,6 +143,10 @@ same commands without the `uv run` prefix.)
   catalog semantics via the additive `rows:` construct): a full real day, 14,476,804 records →
   5,499,568 canonical rows, with unmapped ids counted, never silent. One query now returns both
   vendors' voltage in identical canonical shape.
+- **Deployed (Phase 3):** the target binding in this repo drives the live platform sink.
+  `secha.canonical.measurement` (5,535,568 rows, both vendors, idempotent MERGE re-runs verified)
+  and the `secha.serving.pq_minute_wide` snapshot exist in Unity Catalog on the TUNI cluster,
+  created from this rulebook's DDL, table properties, and `serving/` definitions.
 - **Confirmed with the data platform:** energy counters are **kWh/kvarh** (despite `wh`/`varh` attribute
   names); device-factor scaling is **multiply** by `uk`/`ik`; omitting the API `fields` param returns all
   fields; MX Electrix timestamps are UTC; ProCem day files rotate at **Helsinki-local** midnight.
