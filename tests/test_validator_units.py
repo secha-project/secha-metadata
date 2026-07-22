@@ -2,7 +2,12 @@
 
 from pathlib import Path
 
-from validate import _check_column, _check_serving_views, _check_source_blocks
+from validate import (
+    _check_column,
+    _check_reference_dimensions,
+    _check_serving_views,
+    _check_source_blocks,
+)
 
 CTX = {
     "quantities": {"voltage", "harmonic_voltage"},
@@ -201,3 +206,53 @@ def test_unknown_serving_mode_is_caught(tmp_path: Path) -> None:
     target = {"serving_schema": "serving", "serving_mode": "materialized"}
     errors = _serving_errors(tmp_path, body, target=target)
     assert any("unknown serving_mode" in e for e in errors)
+
+
+# --- reference-dimension guards ---------------------------------------------------------
+
+_VOCABS = {
+    "quantities": {
+        "voltage": {"default_unit": "V", "standard_ref": "IEC ...", "description": "RMS voltage"},
+        "frequency": {"default_unit": "Hz", "standard_ref": "IEC ...", "description": "Frequency"},
+    }
+}
+
+
+def _refdim_errors(target: dict) -> list[str]:
+    errors: list[str] = []
+    _check_reference_dimensions(target, _VOCABS, errors)
+    return errors
+
+
+def test_valid_reference_dimension_passes() -> None:
+    target = {
+        "reference_dimensions": {
+            "quantity": {
+                "source_vocabulary": "quantities",
+                "columns": [
+                    {"name": "quantity", "from": "__key__"},
+                    {"name": "default_unit", "from": "default_unit"},
+                    {"name": "description", "from": "description"},
+                ],
+            }
+        }
+    }
+    assert _refdim_errors(target) == []
+
+
+def test_reference_dimension_unknown_vocabulary_is_caught() -> None:
+    target = {"reference_dimensions": {"q": {"source_vocabulary": "quanta", "columns": []}}}
+    assert any("not a known vocabulary" in e for e in _refdim_errors(target))
+
+
+def test_reference_dimension_dangling_attribute_is_caught() -> None:
+    """A column mapping from an attribute no entry has would publish an all-null column."""
+    target = {
+        "reference_dimensions": {
+            "quantity": {
+                "source_vocabulary": "quantities",
+                "columns": [{"name": "note", "from": "annotation"}],
+            }
+        }
+    }
+    assert any("which no 'quantities' entry has" in e for e in _refdim_errors(target))

@@ -221,6 +221,35 @@ def _check_serving_views(serving_dir: Path, target: dict, errors: list[str]) -> 
             )
 
 
+def _check_reference_dimensions(
+    target: dict, vocabularies: dict[str, dict], errors: list[str]
+) -> None:
+    """Reference dimensions are published from the rulebook; their columns must resolve.
+
+    A column whose `from` attribute is absent from EVERY vocabulary entry would publish an
+    all-null column (a silent documentation gap), so it is rejected here.
+    """
+    for name, decl in (target.get("reference_dimensions") or {}).items():
+        source = decl.get("source_vocabulary")
+        vocab = vocabularies.get(source)
+        if vocab is None:
+            errors.append(
+                f"[refdim] {name}: source_vocabulary '{source}' is not a known vocabulary "
+                f"(known: {sorted(vocabularies)})"
+            )
+            continue
+        entries = list(vocab.values())
+        for column in decl.get("columns", []):
+            source_attr = column.get("from")
+            if source_attr == "__key__":
+                continue
+            if not any(source_attr in entry for entry in entries):
+                errors.append(
+                    f"[refdim] {name}: column '{column.get('name')}' maps from "
+                    f"'{source_attr}', which no '{source}' entry has"
+                )
+
+
 def _check_canonical_row(row: dict, ctx: dict, errors: list[str], label: str) -> None:
     required = [
         "source_vendor",
@@ -276,6 +305,9 @@ def validate() -> list[str]:
             errors.append(f"[target] dimension '{name}' -> unknown entity '{cfg['table']}'")
 
     _check_serving_views(ROOT / "serving", target, errors)
+    _check_reference_dimensions(
+        target, {"quantities": vocab["quantities"], "units": units["units"]}, errors
+    )
 
     meta = ROOT / "meta-schemas"
     for vendor_dir in sorted((ROOT / "vendors").iterdir()):

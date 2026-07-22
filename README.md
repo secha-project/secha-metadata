@@ -49,6 +49,7 @@ docs/           architecture diagrams + generated lineage reports + the onboardi
 | Schema versions | `mapping_version` + `vendors/<v>/CHANGELOG.md` | compatibility policy below |
 | Target/sink binding | `targets/canonical.yaml` | shared, not per-vendor; incl. platform table properties + staging |
 | Serving views | `serving/<name>.sql` | one SELECT over `{canonical}`; materialised per the target's `serving_mode` (view, or Delta snapshot) |
+| Reference dimensions | `targets/canonical.yaml` `reference_dimensions` | published from a vocabulary (e.g. `quantity`); consumers JOIN the long fact for descriptions + standards |
 
 ## How the two vendor shapes map
 
