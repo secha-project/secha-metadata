@@ -24,7 +24,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
   dimension is published from `quantity_vocabulary.yaml` (quantity, default_unit,
   standard_ref, description) so consumers JOIN the long fact for human-readable semantics +
   standards. The correct home for per-quantity meaning in a long model; also the downstream
-  answer (David) to the UC 0.4 column-comment limitation. Validator guard: a column mapping
+  answer to the UC 0.4 column-comment limitation. Validator guard: a column mapping
   from an attribute no vocabulary entry has (an all-null column) is rejected. Pinned by tests.
 ### Added (vendor #2: ProCem)
 - **Second vendor onboarded as pure config**, `vendors/procem_kampusareena_pq/`: the Kampusareena
