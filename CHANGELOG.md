@@ -5,6 +5,29 @@ Repository-level changes to `secha-metadata`. Per-vendor mapping changes are log
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added (source documentation: `naming_convention`)
+- `source_schema.yaml` may now carry a `naming_convention` block: the vendor's point-name
+  grammar in prose, for humans and authoring assistants. Documentation, not a rule the
+  engine executes, and it describes the grammar only, never specific answers. Declared in
+  the meta-schema; ProCem's is written out (numeral before the phase is the harmonic order
+  with 1 meaning fundamental, `f` marks Fryze, `DPF` differs from `PF`, and so on).
+  Measured effect: adding it raised model authoring accuracy from 54% to 79%, the same
+  gain as supplying a dozen worked examples. See `experiments/llm_mapping/findings.md`.
+### Added (experiment: which local model should author mappings)
+- `experiments/llm_mapping/`: a benchmark that scores TUNI's local models on the real
+  authoring task. The 68 curated ProCem `rows:` entries are the answer key, so proposals
+  are scored field by field (quantity, phase, variant, harmonic_order, aggregation, unit).
+  Few-shot examples come from the *other* vendor by default, so no test answer is ever
+  shown and the setup mirrors the real "second source arrives" scenario. The prompt is
+  generated from the rulebook, so it cannot drift from the schema being scored against.
+  Reports exact-match accuracy alongside the rate at which proposals pass `validate.py`,
+  which are different questions: a wrong but valid proposal costs review time, an invalid
+  one is rejected automatically. Replies are cached, `temperature` is 0, results are
+  written as a paste-ready table plus raw per-miss JSON.
+### Fixed
+- Corrected the ProCem mapping size in the docs: **68** `rows:` entries, not 71
+  (and 111 variables out of slice, not 108). The configs were always right; the
+  count in CHANGELOG, README, the diary and the vendor changelog was miscounted.
 ### Added (Phase 3, Step 1: platform binding + serving views)
 - `targets/canonical.yaml` gained the facts the Phase-3 platform handshake verified:
   `table_properties` with `delta.feature.catalogManaged: supported` (this Unity Catalog
@@ -29,7 +52,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
 ### Added (vendor #2: ProCem)
 - **Second vendor onboarded as pure config**, `vendors/procem_kampusareena_pq/`: the Kampusareena
   EV-charging-station PQ meter (ProCem platform, long-format 1 Hz triples, catalog-keyed semantics).
-  71 mapped variables incl. fundamental/Fryze variants, unbalance, voltage harmonics 3/5/7, and
+  68 mapped variables incl. fundamental/Fryze variants, unbalance, voltage harmonics 3/5/7, and
   cumulative energy counters. **Zero vocabulary or unit-registry changes were needed.**
 - **Long-shape mapping construct** (additive): `source_schema.shape: long` +
   `record.key_field/value_field`, and mapping `rows:` entries keyed by the record's key-field VALUE

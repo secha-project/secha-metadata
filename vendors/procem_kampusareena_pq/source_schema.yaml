@@ -15,6 +15,28 @@ source_schema_version: "Procem_IDs_v1.2"  # the catalog version these mappings w
 #     the catalog via mapping.rows, keyed on the VALUE of record.key_field -------------
 shape: long
 
+# --- how this vendor names its catalog points ---------------------------------------
+# Documentation, not a rule the engine executes: the grammar a human (or an authoring
+# assistant) needs in order to read a point name correctly. Written down because the
+# names are terse and the conventions are not guessable from the canonical vocabulary
+# alone. Describes the grammar only, never specific point-to-quantity answers.
+naming_convention: |
+  Point names are LV3_<device>_<variable>. Only the <variable> part carries meaning.
+  Quantity letters: U voltage, I current, P active power, Q reactive power,
+    S apparent power, Freq frequency, E cumulative energy counter.
+  A trailing L1, L2 or L3 is the phase. A trailing N is the neutral conductor.
+  U followed by two phase digits (U12, U23, U31) is a line-to-line voltage between
+    those two phases, not a phase-to-neutral one.
+  A numeral placed between the quantity letter and the phase is the harmonic order,
+    so U3L1 is the 3rd harmonic on L1. Order 1 means the fundamental component, so
+    U1L1 is the fundamental (not a harmonic), and the same holds for I1, P1, Q1, S1.
+  A lowercase f after Q or S (Qf, QfL1, EQf) marks the Fryze definition.
+  TDU and TDI are total distortion of voltage and of current.
+  PF is true power factor; DPF is displacement power factor, a different quantity.
+  U2U1 and U0U1 are the negative- and zero-sequence unbalance ratios.
+  P, Q or S with no phase suffix is the three-phase total, not a missing phase.
+  Energy counters end in _plus for import and _minus for export.
+
 # --- format / access descriptor (how to READ + PARSE the raw) ---
 format:
   type: csv

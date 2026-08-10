@@ -33,6 +33,7 @@ serving/        wide serving views as config: one SELECT per <name>.sql over {ca
 meta-schemas/   JSON Schemas that validate the configs themselves
 vendors/<v>/    source_schema.yaml + mapping.yaml + validation.yaml + CHANGELOG.md
 tests/          fixtures (golden) + config-validity + lineage-drift tests
+experiments/    research tooling, outside the CI-gated contract (see llm_mapping/)
 validate.py     schema + cross-reference + no-collapse + serving-view linter
 lineage.py      generates docs/lineage_<vendor>.md from the configs
 docs/           architecture diagrams + generated lineage reports + the onboarding diary
@@ -42,7 +43,7 @@ docs/           architecture diagrams + generated lineage reports + the onboardi
 | Type | File | Notes |
 |---|---|---|
 | Canonical target schema | `canonical/canonical_schema.yaml` (+ vocab, units) | long fact + thin dims, standards-aware |
-| Source schema metadata | `vendors/<v>/source_schema.yaml` | header stub + **shape/format/locale** blocks + fields (verbatim vendor descriptions) |
+| Source schema metadata | `vendors/<v>/source_schema.yaml` | header stub + **shape/format/locale** blocks + fields (verbatim vendor descriptions) + the vendor's `naming_convention` |
 | Mapping metadata | `vendors/<v>/mapping.yaml` | LAV source→canonical; wide `columns:` or long `rows:`; semver-versioned |
 | Transformation rules | `transforms/library.yaml` | **typed** (parameter signatures) |
 | Validation rules | `vendors/<v>/validation.yaml` | row-level only (scope) |
@@ -75,7 +76,7 @@ Full, auto-generated field-by-field traces live in
 A new vendor's new measurement type = **add one entry to `quantity_vocabulary.yaml` + one mapping line
 → a new ROW** in the canonical fact. No new column, no new table, no migration. A genuinely new entity
 (different grain) gets a new sibling table; an unclassifiable field goes to a side-pocket.
-Measured evidence: onboarding ProCem (71 variables incl. Fryze/fundamental variants, harmonics,
+Measured evidence: onboarding ProCem (68 variables incl. Fryze/fundamental variants, harmonics,
 unbalance, energy counters) required **zero** vocabulary or unit-registry changes.
 
 ## Validation: what makes "config-driven" trustworthy
@@ -108,6 +109,10 @@ generated lineage docs from drifting out of sync with the configs.
 - **Explicit `rows:` tables over clever classification.** Long sources map by an explicit, validated
   rtl_id table (generated once from the vendor catalog, then curated), not by name-pattern regexes:
   auditable, diffable, and guarded by the same three validation layers.
+- **Document the source, not just the mapping.** A vendor's `naming_convention` records the grammar
+  of its point names in prose. It costs a few lines and it is what a human author needs anyway.
+  Measured: supplying it raised model authoring accuracy from 54% to 79%, the same gain as a dozen
+  worked examples (`experiments/llm_mapping/findings.md`).
 
 ## Compatibility policy
 Additive = safe (new optional field / quantity). Rename = column-mapping + new `mapping_version`.

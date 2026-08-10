@@ -4,7 +4,7 @@
 ### Added
 - Initial mapping for the Kampusareena EV-charging-station PQ meter (`LV3_EVCharging_*`,
   Laatuvahti 3, rtl_ids 23501-23949, 1 Hz), curated from catalog `Procem_IDs_v1.2.csv`.
-- 71 `rows:` entries (long-shape mapping keyed by rtl_id): F; U phase/line-line/fundamental;
+- 68 `rows:` entries (long-shape mapping keyed by rtl_id): F; U phase/line-line/fundamental;
   I phases/N/fundamental; P/Q/S 3-phase + per-phase with fundamental and Fryze variants;
   PF/DPF; THD U/I; U2U1/U0U1 unbalance; voltage harmonics 3/5/7 per phase; 6 cumulative
   energy counters (`aggregation: counter` per-row override).

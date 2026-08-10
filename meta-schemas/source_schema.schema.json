@@ -13,6 +13,7 @@
     "refresh_cadence": { "type": "string" },
     "source_schema_version": { "type": "string" },
     "shape": { "enum": ["wide", "long"] },
+    "naming_convention": { "type": "string" },
     "format": {
       "type": "object",
       "required": ["type", "encoding"],

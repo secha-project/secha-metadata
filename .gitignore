@@ -4,3 +4,7 @@ __pycache__/
 .ruff_cache/
 *.egg-info/
 .coverage
+# llm mapping experiment: secrets, cached model replies, generated results
+.env
+experiments/**/.cache/
+experiments/**/results/

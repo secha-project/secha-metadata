@@ -67,7 +67,7 @@ Heterogeneity vs MX Electrix (the axes the framework must absorb):
    `event_date` derives from `ts_utc` (truth). The mismatch is documented, not "fixed".
 6. **`aggregation: counter` per-row override** for the cumulative energy counters: the
    "per-column aggregation" discriminator that was documented as the additive next step.
-7. **Slice scope: 71 of 179 variables**, mirroring + extending the MX Electrix slice: F, U
+7. **Slice scope: 68 of 179 variables**, mirroring + extending the MX Electrix slice: F, U
    (phase + line-line + fundamental), I (phases, N, fundamental), P/Q/S (3-phase + per-phase,
    fundamental + Fryze variants), PF/DPF, THD U/I, U2U1/U0U1 unbalance, voltage harmonics
    3/5/7 per phase, and 6 energy counters. Out of slice (documented): harmonic orders
@@ -85,13 +85,13 @@ Heterogeneity vs MX Electrix (the axes the framework must absorb):
   and go; the framework treats that as normal, not exceptional.
 
 ### 2026-07-06, Step 1: `secha-metadata` vendor config (≈2.5 h)
-- Added `vendors/procem_kampusareena_pq/` (source_schema, mapping with 71 `rows:` entries,
+- Added `vendors/procem_kampusareena_pq/` (source_schema, mapping with 68 `rows:` entries,
   validation, per-vendor CHANGELOG) + golden fixtures from **real** 2026-06-15 values.
 - Extended meta-schemas additively: `shape`, `format.delimiter/header`, `record.key_field/
   value_field`, mapping `rows:` (with per-row `harmonic_order`/`aggregation`).
 - Extended `validate.py` (rows checks, shape-consistency, harmonic_order rules, aggregation
   override) and `lineage.py` (rows lineage): **generic tooling, no vendor logic**.
-- **Vocabulary/units additions needed: ZERO.** All 71 variables, including Fryze/fundamental
+- **Vocabulary/units additions needed: ZERO.** All 68 variables, including Fryze/fundamental
   variants, unbalance, harmonics, and energy counters, mapped onto the existing canonical
   vocabulary unchanged. The canonical layer absorbed a second vendor without growing.
 - Canonical enum: `source_vendor` += `procem_kampusareena_pq` (additive).
@@ -102,7 +102,7 @@ Heterogeneity vs MX Electrix (the axes the framework must absorb):
     `validate.py` +50 net, `lineage.py` +17, meta-schemas +28 JSON lines.
   - Vocabulary/units/transform-library changes: **0 lines**.
   - Engine (`secha-transform`) changes so far: **0 lines**.
-  - Gates: `validate.py` OK (3 layers incl. no-collapse over 71 rtl_ids), lineage generated
+  - Gates: `validate.py` OK (3 layers incl. no-collapse over 68 rtl_ids), lineage generated
     + drift-check clean, ruff clean, **14 tests pass** (4 new guards pinned).
 
 ### 2026-07-06, Step 2: `secha-ingestion` ProCem connector (≈1.5 h)
@@ -164,9 +164,42 @@ Baseline contrast: the legacy Scala route = a compiled per-vendor transformer cl
 schema + factory registration + redeploy. Here: the vendor is YAML; every code change was a
 reusable capability.
 
+## 2026-08-10, how much of this could a model have written? (≈3 h)
+
+The 176 lines of configuration above are the RQ3 cost. The obvious follow-up question is
+how much of that a model could produce, so the 68 curated rows were reused as an answer
+key and TUNI's local models were scored against them
+(`experiments/llm_mapping/`, write-up in `findings.md`).
+
+- Best local model: **phi4-14b at 56%** exact on a first pass, beating a model twice its
+  size. Parameter count did not predict performance here.
+- The failures were concentrated: 20 of 30 were the `variant` field, and most of those
+  were one mistake, calling a fundamental-component point `none`. Not a reasoning
+  failure. The vendor's naming grammar was simply never written down anywhere.
+- So it was written down, as a `naming_convention` block in `source_schema.yaml`.
+  Accuracy went to **79%**. A dozen in-vendor examples were worth the same again, and
+  both together reached **96%** (54 of 56 on an identical test set).
+
+Two things this contributes to the RQ3 argument. First, the remaining manual work is
+reviewable rather than generative: the model drafts, the validator rejects malformed
+output automatically, and a human reads a diff. Second, and more interesting for the
+"minimise data-janitor work" framing, **the leverage came from better metadata, not a
+better model**. Documenting a source once helps every future author, human or machine.
+
+Honest caveat recorded in `findings.md`: the convention was written after seeing which
+cases failed, so 79% is an upper estimate of what blind documentation would buy.
+
+The experiment also found a defect in the answer key. The two cases that still fail with
+everything enabled are the energy counters, mapped `phase: none` while the equivalent
+instantaneous three-phase totals are mapped `phase: three_phase`. The model followed the
+documented convention and our own mapping is the inconsistent one. Left unfixed on
+purpose, since changing the key after seeing results would taint the run.
+
 ### Remaining
 - Open: are 1 Hz values instantaneous samples or 1-s aggregates? (default recorded
   as `average` @ `interval_s: 1`, matching Laatuvahti reporting-interval behaviour); confirm
   values are final engineering units; heads-up that EVCharging stopped 2026-06-28.
-- Later (config-only): map the remaining 108 EVCharging variables; more days (backfill loop);
+- Decide with the EE side whether the energy counters should be `phase: three_phase` for
+  consistency with the other three-phase totals, then correct the mapping.
+- Later (config-only): map the remaining 111 EVCharging variables; more days (backfill loop);
   Phase 3 Delta/UC MERGE.

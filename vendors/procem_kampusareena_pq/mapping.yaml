@@ -5,7 +5,7 @@
 # counterpart of wide `columns:`. `desc` carries the catalog point name verbatim
 # (Procem_IDs_v1.2.csv) so lineage stays audit-ready.
 #
-# Slice scope: 71 of the 179 LV3_EVCharging_* variables, mirroring + extending the
+# Slice scope: 68 of the 179 LV3_EVCharging_* variables, mirroring + extending the
 # MX Electrix slice. Deliberately out of slice (additive later, config-only):
 # harmonic orders 2,4,6,8-20 (U*, ids 23541-23659), harmonic currents I2-I20
 # (23691-23809), DC voltages Udc* (23842-23855).
