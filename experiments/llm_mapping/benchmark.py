@@ -1,4 +1,4 @@
-"""Benchmark local TUNI models on the mapping-authoring task.
+"""Benchmark models on the mapping-authoring task, local or commercial.
 
 The question: given a vendor's catalog point (its name, its path, its source unit),
 can a model produce the canonical mapping entry a human author would have written?
@@ -23,11 +23,16 @@ reach the data, so it costs review time but not correctness.
 
 Usage:
     pip install -r requirements.txt
-    cp .env.template .env          # add SECHA_AVIARY_API_KEY
+    cp .env.template .env          # add the key for each provider you use
     python benchmark.py --dry-run                  # inspect the prompt, no API calls
     python benchmark.py --limit 10                 # cheap smoke run
     python benchmark.py                            # full run, all default models
     python benchmark.py --models granite4-32b phi4-14b
+
+    # any OpenAI-compatible endpoint; keys resolve per provider from .env
+    python benchmark.py --list-models --endpoint https://api.mistral.ai/v1/chat/completions
+    python benchmark.py --models mistral-medium-latest --delay 1.0 \
+        --endpoint https://api.mistral.ai/v1/chat/completions
 """
 
 from __future__ import annotations
@@ -43,6 +48,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import requests
 import yaml
@@ -301,21 +307,84 @@ def parse_reply(text: str) -> dict[str, Any] | None:
     return parsed if isinstance(parsed, dict) else None
 
 
-class ModelClient:
-    """OpenAI-compatible client with a disk cache, so re-scoring never re-calls the API."""
+# Which environment variable holds the key for which provider, so a single .env
+# can carry several without one shadowing another.
+KEY_ENV_BY_HOST = {
+    "aviary.fgl.rd.tuni.fi": "SECHA_AVIARY_API_KEY",
+    "api.mistral.ai": "SECHA_MISTRAL_API_KEY",
+    "integrate.api.nvidia.com": "SECHA_NVIDIA_API_KEY",
+}
 
-    def __init__(self, endpoint: str, api_key: str, cache_dir: Path, timeout: int) -> None:
+
+def api_key_for(endpoint: str) -> str:
+    """Resolve the API key for an endpoint, or an empty string if none is set.
+
+    A proxy on localhost authenticates upstream itself and needs no key here.
+    """
+    host = urlparse(endpoint).hostname or ""
+    if host in ("localhost", "127.0.0.1"):
+        return "local-proxy"
+    specific = KEY_ENV_BY_HOST.get(host)
+    if specific and os.environ.get(specific):
+        return os.environ[specific]
+    return os.environ.get("SECHA_LLM_API_KEY", "")
+
+
+def provider_tag(endpoint: str) -> str:
+    """A short, filesystem-safe name for the host behind an endpoint.
+
+    Cache entries are scoped by provider so that two services offering a model
+    of the same name cannot read each other's replies.
+    """
+    host = urlparse(endpoint).hostname or "unknown"
+    return re.sub(r"[^A-Za-z0-9]+", "-", host).strip("-").lower()
+
+
+def list_models(endpoint: str, api_key: str, timeout: int) -> list[dict[str, Any]]:
+    """Enumerate the models an OpenAI-compatible endpoint offers."""
+    base = endpoint.rsplit("/chat/completions", 1)[0]
+    response = requests.get(
+        f"{base}/models",
+        headers={"Authorization": f"Bearer {api_key}"},
+        timeout=timeout,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    models = payload.get("data", payload) if isinstance(payload, dict) else payload
+    return [m for m in models if isinstance(m, dict)]
+
+
+class ModelClient:
+    """OpenAI-compatible client with a disk cache, so re-scoring never re-calls the API.
+
+    `delay` is a courtesy pause between live calls. Some providers treat rapid
+    scripted traffic as abuse, and a benchmark firing dozens of requests is
+    exactly that pattern, so throttling is a setting rather than an afterthought.
+    Cached replies never sleep, since no request is made.
+    """
+
+    def __init__(
+        self,
+        endpoint: str,
+        api_key: str,
+        cache_dir: Path,
+        timeout: int,
+        delay: float = 0.0,
+        max_tokens: int = 300,
+    ) -> None:
         self._endpoint = endpoint
         self._headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-        self._cache_dir = cache_dir
+        self._cache_dir = cache_dir / provider_tag(endpoint)
         self._timeout = timeout
+        self._delay = delay
+        self._max_tokens = max_tokens
 
     def complete(self, model: str, messages: list[dict[str, str]]) -> tuple[str | None, float, str]:
         payload = {
             "model": model,
             "messages": messages,
             "temperature": 0,  # structured output: same prompt, same answer
-            "max_tokens": 300,
+            "max_tokens": self._max_tokens,
         }
         digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()[
             :20
@@ -328,6 +397,8 @@ class ModelClient:
 
         last_error = "unknown error"
         for attempt in range(3):
+            if self._delay:
+                time.sleep(self._delay)
             started = time.monotonic()
             try:
                 response = requests.post(
@@ -340,11 +411,25 @@ class ModelClient:
             elapsed = time.monotonic() - started
             if response.status_code != 200:
                 last_error = f"HTTP {response.status_code}: {response.text[:160]}"
+                if response.status_code == 429:
+                    # Throttling, not refusal. Free tiers rate-limit aggressively, and
+                    # treating this as fatal would score a model as unavailable when it
+                    # was merely asked too quickly. Back off further than for a 5xx.
+                    time.sleep(5 * (attempt + 1))
+                    continue
                 if response.status_code < 500:
-                    break  # a client error will not fix itself on retry
+                    break  # any other client error will not fix itself on retry
                 time.sleep(2 * (attempt + 1))
                 continue
-            content = response.json()["choices"][0]["message"]["content"]
+            choice = response.json()["choices"][0]
+            content = choice["message"].get("content")
+            if not (content or "").strip():
+                reason = choice.get("finish_reason") or "unknown"
+                if reason == "length":
+                    last_error = f"empty content, truncated at max_tokens={self._max_tokens}"
+                else:
+                    last_error = f"empty content, finish_reason={reason}"
+                break  # a larger budget is the fix, and retrying costs the same tokens
             cached.parent.mkdir(parents=True, exist_ok=True)
             cached.write_text(
                 json.dumps({"content": content, "elapsed": elapsed}), encoding="utf-8"
@@ -512,9 +597,32 @@ def main() -> int:
         action="store_true",
         help="ignore the vendor's documented naming convention (the A/B baseline)",
     )
-    parser.add_argument("--limit", type=int, default=0, help="score only the first N cases")
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="score only N cases, sampled evenly across quantity families",
+    )
     parser.add_argument("--timeout", type=int, default=180)
+    parser.add_argument(
+        "--max-tokens",
+        type=int,
+        default=300,
+        help="generation cap. Reasoning models spend it before answering and need more",
+    )
     parser.add_argument("--dry-run", action="store_true", help="print one prompt and exit")
+    parser.add_argument(
+        "--list-models",
+        action="store_true",
+        help="enumerate the models this endpoint offers, then exit",
+    )
+    parser.add_argument(
+        "--delay",
+        type=float,
+        default=0.0,
+        help="seconds to pause before each live call. Set this for providers that "
+        "treat rapid scripted traffic as abuse; cached replies are unaffected.",
+    )
     parser.add_argument("--out", type=Path, default=HERE / "results")
     args = parser.parse_args()
 
@@ -547,7 +655,10 @@ def main() -> int:
     else:
         shots = []
     if args.limit:
-        cases = cases[: args.limit]
+        # Stratified, not the first N. The mapping is grouped by quantity family and
+        # the easy families come first, so a head slice would screen models on
+        # frequency and plain voltages and miss every case that discriminates.
+        cases = stratified_holdout(cases, args.limit)[0]
 
     if args.dry_run:
         messages = build_messages(system, shots, cases[0])
@@ -556,12 +667,29 @@ def main() -> int:
         print(f"({len(messages)} messages total: system + {len(shots)} examples + 1 question)")
         return 0
 
-    api_key = os.environ.get("SECHA_AVIARY_API_KEY", "")
+    # A local proxy needs no key of its own; it authenticates upstream itself.
+    api_key = api_key_for(args.endpoint)
     if not api_key:
-        print("SECHA_AVIARY_API_KEY is not set. Copy .env.template to .env and add your key.")
+        want = KEY_ENV_BY_HOST.get(urlparse(args.endpoint).hostname or "", "SECHA_LLM_API_KEY")
+        print(f"No API key for this endpoint. Set {want} in .env.")
         return 1
 
-    client = ModelClient(args.endpoint, api_key, HERE / ".cache", args.timeout)
+    if args.list_models:
+        try:
+            models = list_models(args.endpoint, api_key, args.timeout)
+        except requests.RequestException as exc:
+            print(f"could not list models: {exc}")
+            return 1
+        print(f"{len(models)} models at {provider_tag(args.endpoint)}:\n")
+        for m in sorted(models, key=lambda x: str(x.get("id"))):
+            owner = m.get("owned_by") or m.get("vendor") or ""
+            label = m.get("display_name") or m.get("name") or ""
+            print(f"  {m.get('id')!s:<40} {owner!s:<12} {label}")
+        return 0
+
+    client = ModelClient(
+        args.endpoint, api_key, HERE / ".cache", args.timeout, args.delay, args.max_tokens
+    )
     scores = []
     for model in args.models:
         print(f"\n{model}")

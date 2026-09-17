@@ -8,3 +8,7 @@ __pycache__/
 .env
 experiments/**/.cache/
 experiments/**/results/
+# propose.py: generated vendor drafts and cached model replies. A draft becomes
+# repository content only by being installed into vendors/ and reviewed.
+proposals/
+.cache/

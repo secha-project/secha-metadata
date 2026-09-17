@@ -5,6 +5,35 @@ Repository-level changes to `secha-metadata`. Per-vendor mapping changes are log
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added (authoring: `propose.py`)
+- `propose.py` drafts a complete vendor directory (`source_schema.yaml`, `mapping.yaml`,
+  `validation.yaml`, `CHANGELOG.md`) from a partner catalog plus a human-authored spec,
+  and gates it on `validate.py` before anything is written to `vendors/`.
+- Only semantics are inferred: quantity, phase, unit, variant, harmonic_order. Operational
+  metadata and validation thresholds stay human-authored, because they are decisions about
+  a system and a domain rather than readings of a point name.
+- `specs/<vendor>.spec.yaml` is a new metadata type with its own meta-schema
+  (`meta-schemas/propose_spec.schema.json`), so the generator's input is validated config.
+- The gate runs in a staging copy containing only the proposed vendor, so a rejected draft
+  never touches the repository and `--apply` refuses to overwrite an existing vendor.
+- `PROPOSAL.md` reports every entry with advisories for checks the validator cannot make:
+  a unit whose dimension cannot measure the proposed quantity, a harmonic order that does
+  not appear in the point name, and a vendor-declared unit that contradicts the proposal.
+- Measured on the ProCem catalog with `phi4-14b`: 74% exact against the hand-curated
+  mapping on the 68 shared keys, and the validator rejected the 173-point draft with 42
+  problems: 30 identity collapses, 9 fundamentals written as harmonic order 1, a
+  non-canonical phase, and one null unit that two checks each reported. Proposing a whole
+  catalog at once is more checkable than proposing one point at a time: the no-collapse
+  invariant only bites when
+  both colliding points are in scope.
+### Changed
+- `validate()` takes an optional `root`, so a proposal can be checked in a staging tree.
+  The default is unchanged and the CI entry point is untouched.
+- `experiments/llm_mapping/benchmark.py` scores any OpenAI-compatible endpoint (the Copilot
+  proxy, Mistral, NVIDIA NIM) on the same ground truth: keys resolve per provider, replies
+  are cached per provider under `.cache/<provider>/<model>/`, `--limit` samples across
+  quantity families, and an empty reply is reported by its `finish_reason` rather than
+  scored as wrong. Commercial and open-weight results are in its `findings.md`.
 ### Added (source documentation: `naming_convention`)
 - `source_schema.yaml` may now carry a `naming_convention` block: the vendor's point-name
   grammar in prose, for humans and authoring assistants. Documentation, not a rule the

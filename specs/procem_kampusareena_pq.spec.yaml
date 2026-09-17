@@ -1,0 +1,97 @@
+# =============================================================================
+# propose.py spec: ProCem Kampusareena EV-charging-station PQ meter.
+#
+# A worked example, and the one case where the result can be checked: this vendor
+# is already mapped by hand in vendors/procem_kampusareena_pq/, so a proposal
+# generated from the same catalog can be diffed against known-correct answers.
+#
+# Everything in this file is human-authored. propose.py adds only the semantics of
+# each catalog point (quantity, phase, unit, variant, harmonic_order). It is not
+# asked where the data lands or what counts as an implausible voltage, because
+# those are decisions about a system and a domain, not readings of a point name.
+# =============================================================================
+vendor: procem_kampusareena_pq
+source: daily_dump
+owner: "ProCem/ProCemPlus platform (TAU), maintained by Ville Heikkila"
+contact: "ville.heikkila@tuni.fi"
+sensitivity: project-internal
+refresh_cadence: daily
+source_schema_version: "Procem_IDs_v1.2"
+mapping_version: "0.1.0"
+target_schema_version: "1.0.0"
+
+shape: long
+
+# The grammar a reader needs to interpret a point name, and nothing more. Documenting
+# this is the single highest-value input to a proposal: measured at +23 to +43 accuracy
+# points across four model families, which is larger than the difference between a 14B
+# model and a frontier one. It describes the grammar only and never gives an answer.
+naming_convention: |
+  Point names are LV3_<device>_<variable>. Only the <variable> part carries meaning.
+  Quantity letters: U voltage, I current, P active power, Q reactive power,
+    S apparent power, Freq frequency, E cumulative energy counter.
+  A trailing L1, L2 or L3 is the phase. A trailing N is the neutral conductor.
+  U followed by two phase digits (U12, U23, U31) is a line-to-line voltage between
+    those two phases, not a phase-to-neutral one.
+  A numeral placed between the quantity letter and the phase is the harmonic order,
+    so U3L1 is the 3rd harmonic on L1. Order 1 means the fundamental component, so
+    U1L1 is the fundamental (not a harmonic), and the same holds for I1, P1, Q1, S1.
+  A lowercase f after Q or S (Qf, QfL1, EQf) marks the Fryze definition.
+  TDU and TDI are total distortion of voltage and of current.
+  PF is true power factor; DPF is displacement power factor, a different quantity.
+  U2U1 and U0U1 are the negative- and zero-sequence unbalance ratios.
+  P, Q or S with no phase suffix is the three-phase total, not a missing phase.
+  Energy counters end in _plus for import and _minus for export.
+
+format:
+  type: csv
+  delimiter: "\t"
+  header: false
+  encoding: utf-8
+  decimal_separator: "."
+  datetime_format: epoch_ms
+
+access:
+  landing_root_env: SECHA_LANDING_ROOT
+  layout: "vendor=procem_kampusareena_pq/source=daily_dump/date={date}"
+  partition_keys: [date]
+  snapshot_selection: latest_by_fetched_at
+
+record:
+  key_field: measurement_id
+  value_field: value
+  timestamp_field: timestamp
+  row_id_field: measurement_id
+  device_id_template: "procem:kampusareena:evcharging"
+
+defaults:
+  aggregation: average
+  interval_s: 1
+
+# A long source has the same three logical fields on every row. The catalog describes
+# the key VALUES, which become mapping.rows, so they do not belong here.
+long_fields:
+  - {name: measurement_id, type: long,   nullable: false, desc: "rtl_id: catalog key identifying the measured variable"}
+  - {name: value,          type: string, nullable: false, desc: "measured value as a decimal string; catalog datatype governs parsing"}
+  - {name: timestamp,      type: long,   nullable: false, desc: "measurement instant, epoch milliseconds (UTC)"}
+
+# Candidate rules. Only those whose quantity is actually mapped reach validation.yaml.
+# Thresholds match mx_electrix so quality flags stay comparable across vendors.
+validation_defaults:
+  - {quantity: frequency,                 type: range, min: 45, max: 65,   on_fail: flag_suspect}
+  - {quantity: voltage,                   type: range, min: 0,  max: 1000, on_fail: flag_suspect}
+  - {quantity: power_factor,              type: range, min: -1, max: 1,    on_fail: flag_suspect}
+  - {quantity: displacement_power_factor, type: range, min: -1, max: 1,    on_fail: flag_suspect}
+
+catalog:
+  # Partner metadata, deliberately not committed to this repo. Path is relative to
+  # this spec file; point it at your working copy.
+  path: "../../../secha-data-procem/catalog_evcharging.csv"
+  delimiter: ";"
+  key_column: rtl_id
+  name_column: name
+  context_column: path
+  unit_column: unit
+  # DC-link voltages have no canonical quantity yet. Adding one is a deliberate
+  # vocabulary change, not something a proposal should decide, so they stay out.
+  exclude_pattern: "_Udc"

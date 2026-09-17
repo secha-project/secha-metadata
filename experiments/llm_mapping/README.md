@@ -1,8 +1,9 @@
-# Which local model should author mappings?
+# Which model should author mappings?
 
 An experiment, not part of the CI-gated contract. It answers one question with evidence
 instead of opinion: **given a vendor catalog point, can a model produce the canonical
-mapping entry a human would have written, and which of the TUNI models does it best?**
+mapping entry a human would have written, and which model does it best?** Local models
+on the university service and commercial models are scored on identical ground truth.
 
 ## Why this is measurable here
 
@@ -38,15 +39,40 @@ point of having the validator in front of the model.
 
 ## Results so far
 
-See [findings.md](findings.md) for the full write-up. The short version: `phi4-14b` is the
-best of the local models and beats a model twice its size; accuracy is limited less by the
-model than by how well the source is documented; and documenting the vendor's naming
-convention in `source_schema.yaml` is worth as much as a dozen worked examples.
+See [findings.md](findings.md) for the full write-up. Accuracy is limited less by the
+model than by how well the source is documented, and that holds across four model
+families.
+
+Local models, `phi4-14b`, 56 cases:
 
 |  | cross-vendor examples | in-vendor examples |
 |---|---|---|
 | **no convention** | 54% | 79% |
 | **with convention** | 79% | **96%** |
+
+Local against commercial against open weight, 68 cases, cross-vendor examples:
+
+| Condition | phi4-14b (local) | gpt-4.1 (commercial) | mistral-medium (commercial) | deepseek-v4-pro (open weight) |
+|---|---|---|---|---|
+| **without convention** | **56%** | 38% | 43% | 41% |
+| **with convention** | 79% | 78% | **84%** | **84%** |
+| gain from documenting | +23 | +40 | +41 | +43 |
+
+Three results. **Without the naming convention the local 14B model beats every larger
+model tested**, including a frontier open-weight one, which is the arm most likely to
+have overturned that finding because it removes the confound of renting. **With the
+convention supplied all four land between 78% and 84%**, despite spanning 14 billion
+parameters to frontier scale, so documenting the source compresses a wide capability
+range into a narrow band. And the open-weight model gains +43, matching the commercial
+pattern rather than phi4's +23, which shows the smaller gain belongs to phi4 starting
+higher rather than to anything about local against rented models.
+
+The two models tied at 84% both score exactly 57 of 68. Six of the eleven DeepSeek
+misses are the ground-truth inconsistency described in `findings.md` section 4, where
+energy counters are mapped as `phase: none` while the instantaneous totals measuring the
+same quantity are mapped as `three_phase`. A consistent answer key would put that model
+at 61 of 68. The key is deliberately left alone, but two independent models have now
+flagged the same defect.
 
 ## Running it
 
@@ -74,14 +100,102 @@ documenting a source improves authoring accuracy with no change to this script.
 Results are written to `results/comparison.md` (a table ready to paste into the thesis)
 and `results/raw.json` (every miss, with expected and actual, for error analysis).
 
-Replies are cached in `.cache/` keyed by model and prompt, so re-scoring or changing the
-report costs nothing and the shared university service is not hit twice for the same
-question. Delete `.cache/` to force fresh calls.
+Replies are cached in `.cache/<provider>/<model>/`, keyed by the exact request, so
+re-scoring or changing the report costs nothing and the shared university service is not
+hit twice for the same question. Delete `.cache/` to force fresh calls.
+
+## Selecting a commercial model
+
+The same harness scores any OpenAI-compatible endpoint, so a commercial model is
+compared on exactly the ground truth, prompt and scoring the local models faced.
+Only the endpoint changes.
+
+GitHub Copilot is reached through the `copilot-api` proxy, which exposes Copilot
+as an OpenAI-compatible service on localhost. Authenticate once, start it with a
+rate limit, then point the harness at it:
+
+```bash
+# once: device-flow login with your GitHub account
+node dist/main.js auth
+
+# per session: serve on 4141, one request per 2 seconds, queue rather than fail
+node dist/main.js start --rate-limit 2 --wait
+```
+
+```bash
+COPILOT=http://localhost:4141/v1/chat/completions
+
+# see what the account can reach
+python benchmark.py --list-models --endpoint $COPILOT
+
+# stage 1: screen the candidates cheaply on 20 cases
+python benchmark.py --endpoint $COPILOT --delay 2 --limit 20 --models <a> <b> <c> --out results/copilot_screen
+
+# stage 2: full 68 cases on the best one or two, which is what gets reported
+python benchmark.py --endpoint $COPILOT --delay 2 --models <winner> --out results/copilot_full
+```
+
+Screening before confirming keeps the request volume down, which matters here:
+the proxy's own documentation warns that bulk scripted use can trigger GitHub's
+abuse detection and suspend Copilot access. Use `--delay`, keep the candidate
+list short, and rely on the cache so no question is ever asked twice.
+
+Replies are cached per provider, so Aviary and Copilot results cannot collide
+even if two services offer a model of the same name.
+
+**A caveat worth recording in the thesis.** Copilot does not pin or document
+which build of a model serves a request, so "the commercial model" is not a
+reproducible identity through this proxy. Use it to survey the field and to
+choose; if a pinned, versioned endpoint is available for the result you actually
+report, prefer it and say which was used.
+
+## Selecting an open-weight frontier model
+
+The commercial arm answers "how good is a model you rent". It does not answer
+"how good is a model you could host yourself", which is the question that
+matters for a university deployment where partner metadata should not leave the
+premises. NVIDIA NIM serves open-weight models on a free tier, so a frontier
+open-weight model can be scored on the same ground truth as everything else.
+
+```bash
+NIM=https://integrate.api.nvidia.com/v1/chat/completions
+MODEL=deepseek-ai/deepseek-v4-pro-0813
+
+python benchmark.py --list-models --endpoint $NIM
+
+# the two conditions that matter, full 68 cases each
+python benchmark.py --endpoint $NIM --models $MODEL --timeout 900 --delay 1     --out results/nv_deepseek_conv
+python benchmark.py --endpoint $NIM --models $MODEL --timeout 900 --delay 1     --no-convention --out results/nv_deepseek_noconv
+```
+
+**This model has since been retired.** NVIDIA took `deepseek-ai/deepseek-v4-pro-0813`
+out of service on 2026-09-14, and requests for it now return `HTTP 410 Gone`. The
+recorded results still re-score from the cache. To run this arm again, choose a current
+open-weight model with `--list-models`.
+
+Two practical notes, both of which cost time to learn.
+
+**Give it a long `--timeout`.** Median replies took 138 seconds with the naming
+convention and 280 seconds without, on the free tier. That is queueing, not
+generation: the model emits about a dozen tokens for a mapping entry, and raising
+`--max-tokens` tenfold changes neither the answer nor the latency. Median latency
+against this endpoint therefore measures the hosting, not the model, and should not be
+compared with latencies from a service that is not queueing. At those medians a full
+condition takes several hours, so run it in the background and rely on the cache.
+
+**Check `finish_reason` before believing a low score.** Several models on this
+service return their reasoning trace in a separate `reasoning_content` field
+and leave `content` empty when the generation cap binds. A model that thinks
+past its budget produces no answer at all, which looks exactly like a model that
+cannot follow instructions. `--max-tokens` exists for that case, and the client
+now reports a truncated reply as truncation rather than scoring it as wrong.
+The default of 300 is left alone deliberately: the cache key is a hash of the
+request, so changing the default would invalidate every reply already recorded
+against every other provider.
 
 ## Notes
 
-- The catalog CSV is partner metadata and is not committed here. Point `--catalog` at it;
-  the default is the working copy under `RP and Data/secha-data-procem/`.
+- The catalog CSV is partner metadata and is not committed here. Point `--catalog` at it.
 - `temperature` is 0 so a run is reproducible.
 - Reasoning models such as `deepseek-r1-8b` emit a `<think>` block before answering. The
   parser strips it, so they can be compared fairly, though they are slower.

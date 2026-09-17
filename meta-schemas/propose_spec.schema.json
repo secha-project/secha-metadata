@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://secha.tuni.fi/meta-schemas/propose_spec.schema.json",
+  "title": "propose.py vendor spec",
+  "description": "Human-authored facts propose.py must not infer. Everything here describes a system or a domain decision (who owns the source, where it lands, how it parses, what counts as implausible) rather than the meaning of a point name, which is the only thing a model is asked to read.",
+  "type": "object",
+  "required": [
+    "vendor",
+    "source",
+    "target_schema_version",
+    "format",
+    "access",
+    "catalog"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "vendor": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "source": { "type": "string" },
+    "owner": { "type": "string" },
+    "contact": { "type": "string" },
+    "sensitivity": { "type": "string" },
+    "refresh_cadence": { "type": "string" },
+    "source_schema_version": { "type": "string" },
+    "mapping_version": { "type": "string" },
+    "target_schema_version": { "type": "string" },
+    "shape": { "enum": ["wide", "long"] },
+    "naming_convention": {
+      "type": "string",
+      "description": "The vendor's point-name grammar, as prose. Documenting this is worth more than a larger model: measured at +23 to +43 accuracy points across four model families. Describe the grammar only, never a point-to-quantity answer, or the proposal is copying rather than reading."
+    },
+    "format": {
+      "type": "object",
+      "required": ["type", "encoding"],
+      "properties": {
+        "type": { "enum": ["json", "csv", "parquet", "xml"] },
+        "record_path": { "type": "string" },
+        "encoding": { "type": "string" },
+        "delimiter": { "type": "string" },
+        "header": { "type": "boolean" },
+        "decimal_separator": { "type": "string" },
+        "datetime_format": { "type": "string" }
+      }
+    },
+    "access": {
+      "type": "object",
+      "required": ["landing_root_env", "layout", "partition_keys"],
+      "properties": {
+        "landing_root_env": { "type": "string" },
+        "layout": { "type": "string" },
+        "partition_keys": { "type": "array", "items": { "type": "string" } },
+        "snapshot_selection": { "type": "string" }
+      }
+    },
+    "record": {
+      "type": "object",
+      "properties": {
+        "meter_field": { "type": "string" },
+        "timestamp_field": { "type": "string" },
+        "row_id_field": { "type": "string" },
+        "key_field": { "type": "string" },
+        "value_field": { "type": "string" },
+        "device_id_template": { "type": "string" }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "aggregation": { "type": "string" },
+        "interval_s": { "type": "integer" }
+      }
+    },
+    "device_factors": { "type": "object" },
+    "long_fields": {
+      "type": "array",
+      "description": "The logical fields of a long source: the same triple on every row. Required when shape is long, because the catalog then describes key VALUES, which become mapping.rows, not fields.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "unit": { "type": ["string", "null"] },
+          "nullable": { "type": "boolean" },
+          "desc": { "type": "string" }
+        }
+      }
+    },
+    "validation_defaults": {
+      "type": "array",
+      "description": "Candidate row-level rules. Only those whose quantity is actually mapped are emitted. Thresholds are a domain decision and are never invented by propose.py.",
+      "items": {
+        "type": "object",
+        "required": ["type", "on_fail"],
+        "properties": {
+          "type": { "enum": ["range", "not_null", "correction", "enum"] },
+          "on_fail": {
+            "enum": ["flag_suspect", "reject_row", "drop_row", "quarantine", "correct"]
+          },
+          "field": { "type": "string" },
+          "quantity": { "type": "string" },
+          "entity": { "type": "string" },
+          "min": { "type": "number" },
+          "max": { "type": "number" },
+          "op": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "catalog": {
+      "type": "object",
+      "description": "How to read the vendor's own catalog export. Paths are relative to the spec file.",
+      "required": ["path", "key_column", "name_column"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string" },
+        "delimiter": { "type": "string" },
+        "encoding": { "type": "string" },
+        "key_column": { "type": "string" },
+        "name_column": { "type": "string" },
+        "context_column": { "type": "string" },
+        "unit_column": { "type": "string" },
+        "field_type": { "type": "string" },
+        "include_pattern": { "type": "string" },
+        "exclude_pattern": { "type": "string" }
+      }
+    }
+  },
+  "if": { "properties": { "shape": { "const": "long" } }, "required": ["shape"] },
+  "then": { "required": ["long_fields", "record"] }
+}

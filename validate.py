@@ -278,13 +278,19 @@ def _check_canonical_row(row: dict, ctx: dict, errors: list[str], label: str) ->
         errors.append(f"[golden] {label}: value must be numeric")
 
 
-def validate() -> list[str]:
+def validate(root: Path = ROOT) -> list[str]:
+    """Check every config under `root`, returning problems as text.
+
+    `root` is a parameter so a proposed vendor can be validated in a staging
+    tree before it is written into vendors/. Nothing here is specific to this
+    checkout; the default simply keeps the CI entry point unchanged.
+    """
     errors: list[str] = []
-    canon = _load_yaml(ROOT / "canonical" / "canonical_schema.yaml")
-    vocab = _load_yaml(ROOT / "canonical" / "quantity_vocabulary.yaml")
-    units = _load_yaml(ROOT / "canonical" / "units.yaml")
-    library = _load_yaml(ROOT / "transforms" / "library.yaml")
-    target = _load_yaml(ROOT / "targets" / "canonical.yaml")
+    canon = _load_yaml(root / "canonical" / "canonical_schema.yaml")
+    vocab = _load_yaml(root / "canonical" / "quantity_vocabulary.yaml")
+    units = _load_yaml(root / "canonical" / "units.yaml")
+    library = _load_yaml(root / "transforms" / "library.yaml")
+    target = _load_yaml(root / "targets" / "canonical.yaml")
 
     ctx = {
         "quantities": set(vocab["quantities"]),
@@ -304,13 +310,13 @@ def validate() -> list[str]:
         if cfg["table"] not in entities:
             errors.append(f"[target] dimension '{name}' -> unknown entity '{cfg['table']}'")
 
-    _check_serving_views(ROOT / "serving", target, errors)
+    _check_serving_views(root / "serving", target, errors)
     _check_reference_dimensions(
         target, {"quantities": vocab["quantities"], "units": units["units"]}, errors
     )
 
-    meta = ROOT / "meta-schemas"
-    for vendor_dir in sorted((ROOT / "vendors").iterdir()):
+    meta = root / "meta-schemas"
+    for vendor_dir in sorted((root / "vendors").iterdir()):
         if not vendor_dir.is_dir():
             continue
         name = vendor_dir.name
@@ -375,7 +381,7 @@ def validate() -> list[str]:
             if quantity is not None and quantity not in ctx["quantities"]:
                 errors.append(f"[xref] {name}/validation: quantity '{quantity}' not in vocabulary")
 
-        golden = ROOT / "tests" / "fixtures" / name / "expected_canonical.json"
+        golden = root / "tests" / "fixtures" / name / "expected_canonical.json"
         if golden.exists():
             for i, row in enumerate(_load_json(golden)):
                 _check_canonical_row(row, ctx, errors, f"{name} golden[{i}]")

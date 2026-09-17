@@ -33,8 +33,10 @@ serving/        wide serving views as config: one SELECT per <name>.sql over {ca
 meta-schemas/   JSON Schemas that validate the configs themselves
 vendors/<v>/    source_schema.yaml + mapping.yaml + validation.yaml + CHANGELOG.md
 tests/          fixtures (golden) + config-validity + lineage-drift tests
+specs/          propose.py inputs: the human-authored facts a draft cannot infer
 experiments/    research tooling, outside the CI-gated contract (see llm_mapping/)
 validate.py     schema + cross-reference + no-collapse + serving-view linter
+propose.py      drafts a whole vendor directory from a partner catalog, gated by validate
 lineage.py      generates docs/lineage_<vendor>.md from the configs
 docs/           architecture diagrams + generated lineage reports + the onboarding diary
 ```
@@ -48,9 +50,49 @@ docs/           architecture diagrams + generated lineage reports + the onboardi
 | Transformation rules | `transforms/library.yaml` | **typed** (parameter signatures) |
 | Validation rules | `vendors/<v>/validation.yaml` | row-level only (scope) |
 | Schema versions | `mapping_version` + `vendors/<v>/CHANGELOG.md` | compatibility policy below |
+| Proposal spec | `specs/<v>.spec.yaml` | `propose.py` input: identity, access, format, record, naming convention, candidate validation thresholds, and how to read the vendor catalog |
 | Target/sink binding | `targets/canonical.yaml` | shared, not per-vendor; incl. platform table properties + staging |
 | Serving views | `serving/<name>.sql` | one SELECT over `{canonical}`; materialised per the target's `serving_mode` (view, or Delta snapshot) |
 | Reference dimensions | `targets/canonical.yaml` `reference_dimensions` | published from a vocabulary (e.g. `quantity`); consumers JOIN the long fact for descriptions + standards |
+
+## Drafting a vendor: `propose.py`
+
+Onboarding is a pull request here, and the slow part of that pull request is reading a
+vendor catalog point by point to decide what each one means. `propose.py` drafts that
+decision for a whole catalog and refuses to emit anything the validator would reject.
+
+```bash
+python propose.py --spec specs/<vendor>.spec.yaml --dry-run   # inspect the prompt
+python propose.py --spec specs/<vendor>.spec.yaml --limit 10  # cheap trial
+python propose.py --spec specs/<vendor>.spec.yaml             # draft into proposals/<vendor>/
+python propose.py --spec specs/<vendor>.spec.yaml --apply     # install once validated
+```
+
+It calls the model over HTTP with `requests`, which the CI-gated contract does not install;
+`pip install -r experiments/llm_mapping/requirements.txt` provides it.
+
+**Only semantics are inferred**: quantity, phase, unit, variant, harmonic_order. Every
+operational fact (owner, access layout, format, record fields) and every validation
+threshold is human-authored in the spec, because those are decisions about a system and a
+domain rather than readings of a point name. The spec has its own meta-schema, so the
+input to the generator is validated config like everything else here.
+
+**The gate is real.** A draft is validated in a staging copy of the repository that
+contains only the proposed vendor, so `vendors/` is never touched until the proposal is
+clean, and a rejected draft leaves nothing behind. Nothing is installed without `--apply`,
+and `--apply` refuses to overwrite an existing vendor.
+
+**A clean validator run is the start of the review, not the end.** On the one vendor with
+ground truth, proposals are 98 to 100% valid and 38 to 84% correct, so almost every wrong
+proposal is still a legal config. Every generated file says so in its header, and
+`PROPOSAL.md` lists each entry with advisory notes for the checks the validator cannot
+make, such as a unit that could not measure the quantity it was paired with.
+
+Proposing a whole catalog at once is more checkable than proposing one point at a time.
+The no-collapse invariant only has teeth when both of two colliding points are in scope:
+a fundamental component mapped as if it were the plain quantity is one wrong field in
+isolation, but two source points sharing one canonical identity when the catalog is
+proposed together, which is a hard rejection rather than a judgement call.
 
 ## How the two vendor shapes map
 
