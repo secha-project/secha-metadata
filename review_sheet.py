@@ -116,9 +116,7 @@ def read_catalog(path: Path | None) -> dict[str, dict[str, str]]:
     rows = list(csv.DictReader(lines, delimiter=delimiter))
     if not rows:
         return {}
-    key_column = next(
-        (c for c in rows[0] if c and c.lower() in {"rtl_id", "id", "key"}), None
-    )
+    key_column = next((c for c in rows[0] if c and c.lower() in {"rtl_id", "id", "key"}), None)
     if key_column is None:
         return {}
     return {(row.get(key_column) or "").strip(): row for row in rows}
