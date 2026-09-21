@@ -26,6 +26,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
   catalog at once is more checkable than proposing one point at a time: the no-collapse
   invariant only bites when
   both colliding points are in scope.
+### Added (domain review: `review_sheet.py`)
+- `review_sheet.py` builds one workbook per vendor from the configs: every mapped point
+  with a verdict column, the catalog points no entry claims with a stated reason, the
+  validation limits in plain words, the canonical vocabulary, and the open questions.
+  Mapping rows reuse the `lineage.py` helpers, so the workbook and the generated lineage
+  table cannot disagree. Needs `openpyxl`, which the CI-gated contract does not install.
+- `review_questions.yaml`: the questions only a domain expert can settle, per vendor, so
+  a review answers them in writing. Four concern both vendors today, including whether a
+  cumulative energy counter should carry `phase: three_phase` like the instantaneous
+  total, and whether apparent energy (VAh) should enter the vocabulary.
 ### Changed
 - `validate()` takes an optional `root`, so a proposal can be checked in a staging tree.
   The default is unchanged and the CI entry point is untouched.

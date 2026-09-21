@@ -1,0 +1,76 @@
+questions:
+  - id: energy_counter_phase
+    vendors: [mx_electrix, procem_kampusareena_pq]
+    question: >-
+      Should a cumulative energy counter for a three-phase quantity carry phase
+      "three_phase", like the instantaneous total, or "none" as it does today?
+    why: >-
+      The instantaneous totals are mapped as three_phase while the counters measuring
+      the same quantity are mapped as none, so the two cannot be compared without
+      knowing that rule. Two independent checks flagged it, and we have deliberately
+      not changed it before asking.
+
+  - id: apparent_energy
+    vendors: [procem_kampusareena_pq]
+    question: >-
+      Do you need apparent energy (VAh), and should we add energy_apparent_import and
+      energy_apparent_export to the canonical vocabulary?
+    why: >-
+      ProCem ships EStot_imp, EStot_exp and the per-phase ES points in VAh, but the
+      vocabulary carries only active and reactive energy, so those points stay
+      unmapped rather than being forced into a quantity that does not fit.
+
+  - id: tan_phi
+    vendors: [procem_kampusareena_pq]
+    question: >-
+      Do you need tan(phi) as a canonical quantity of its own? ProCem ships TanPhi and we
+      have left it unmapped.
+    why: >-
+      tan(phi) is not the displacement power factor, so recording it under that name would
+      file one quantity under another. Leaving it out keeps it counted and visible until
+      you tell us it is needed.
+
+  - id: serving_views
+    vendors: [mx_electrix, procem_kampusareena_pq]
+    question: >-
+      Besides the minute-level wide view, which wide views would help you, for example
+      per-phase harmonics or EN 50160 style aggregates?
+    why: >-
+      A serving view is one SQL file over the canonical table, so another one costs a file
+      rather than a release. The sample workbook shows what the minute view gives today.
+
+  - id: suspect_handling
+    vendors: [mx_electrix, procem_kampusareena_pq]
+    question: >-
+      Please confirm how flagged readings should be handled: a suspect reading stays in the
+      canonical table, and the wide serving view leaves it out.
+    why: >-
+      This follows an earlier request from your side. It is the one place where our own
+      flagging changes what an analysis sees, so it is worth confirming in writing.
+
+  - id: source_quality_flags
+    vendors: [mx_electrix, procem_kampusareena_pq]
+    question: >-
+      Should flags the instrument itself sets, such as dips, swells and IEC 61000-4-30
+      flagging, be carried into the canonical quality field?
+    why: >-
+      Today quality records only our own plausibility checks, so a reading the
+      instrument flagged looks the same as one it did not.
+
+  - id: harmonic_coverage
+    vendors: [mx_electrix, procem_kampusareena_pq]
+    question: >-
+      Which harmonic orders do you need per phase, and do you need interharmonics?
+    why: >-
+      MX Electrix is mapped for orders 3, 5 and 7 today. Mapping another order costs
+      one line of configuration, so the limit should be your analysis rather than our
+      guess.
+
+  - id: native_resolution
+    vendors: [mx_electrix, procem_kampusareena_pq]
+    question: >-
+      Do you confirm that we should store the native resolution (one second for
+      ProCem, sixty for MX Electrix) and never pre-aggregate it?
+    why: >-
+      Averaging to a standard window is cheap downstream and impossible to undo
+      upstream, so the canonical layer keeps what the instrument reported.

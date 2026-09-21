@@ -12,3 +12,5 @@ experiments/**/results/
 # repository content only by being installed into vendors/ and reviewed.
 proposals/
 .cache/
+# review_sheet.py: workbooks generated for a domain review, sent by mail, not committed
+review/

@@ -38,6 +38,7 @@ experiments/    research tooling, outside the CI-gated contract (see llm_mapping
 validate.py     schema + cross-reference + no-collapse + serving-view linter
 propose.py      drafts a whole vendor directory from a partner catalog, gated by validate
 lineage.py      generates docs/lineage_<vendor>.md from the configs
+review_sheet.py builds the domain-expert review workbook from the configs
 docs/           architecture diagrams + generated lineage reports + the onboarding diary
 ```
 
@@ -93,6 +94,24 @@ The no-collapse invariant only has teeth when both of two colliding points are i
 a fundamental component mapped as if it were the plain quantity is one wrong field in
 isolation, but two source points sharing one canonical identity when the catalog is
 proposed together, which is a hard rejection rather than a judgement call.
+
+## Asking for a domain review
+
+The people who use this data are the ones who can say whether a point means what we
+claim. `review_sheet.py` turns the configs into a workbook they can answer in, so a
+review comes back as structured answers rather than prose.
+
+```bash
+pip install openpyxl                                   # not in the CI-gated contract
+python review_sheet.py --out ../review                 # one workbook per vendor
+python review_sheet.py --vendor mx_electrix
+```
+
+Each workbook holds every mapped point with a verdict column beside it, the catalog
+points no entry claims and why, the validation limits in plain words, the canonical
+vocabulary, and the questions from `review_questions.yaml` that only a domain expert
+can settle. The mapping rows are built with the same helpers as
+`docs/lineage_<vendor>.md`, so the two can never describe an entry differently.
 
 ## How the two vendor shapes map
 
