@@ -1,0 +1,79 @@
+# =============================================================================
+# propose.py spec: Kempower passenger charging dataset (public_passenger_dataset).
+#
+# The held-out vendor. Kempower was not used to build the benchmark, the prompt, the
+# worked examples or any naming convention, so a proposal drafted from this spec is
+# the first test of propose.py on a source nobody tuned it for. The protocol is in
+# experiments/kempower_heldout/PROTOCOL.md; this file is pre-registered there.
+#
+# Everything in this file is human-authored. propose.py adds only the semantics of
+# each catalog column. The naming convention below was written before any model saw
+# this catalog, unlike the ProCem one, which was written after seeing failures.
+# =============================================================================
+vendor: kempower
+source: public_passenger_dataset
+owner: "Kempower, shared over Delta Sharing; Spark export written by TAU"
+sensitivity: partner-confidential
+refresh_cadence: "one-off export"
+source_schema_version: "spark-export-95d29330"
+mapping_version: "0.1.0"
+target_schema_version: "1.0.0"
+
+shape: wide
+
+# The grammar of a column name and the facts a reader needs to interpret one, and no
+# point-to-quantity answers. Only what is known is stated; what the provider has not
+# documented is said to be undocumented rather than guessed.
+naming_convention: |
+  There is no catalog beyond the column names, which are camelCase English words and
+  abbreviations. Each row is one sample of one charging session, taken at a 10-second
+  step: transactionId identifies the session and sampleTime10sIncrement counts the
+  seconds since it started.
+  The prefix avg means the value is an average over the sampling step; the provider
+  does not document the averaging window.
+  A trailing capital letter is the unit: W watts, A amperes, V volts. In tempC the
+  trailing C means degrees Celsius.
+  soc abbreviates state of charge: the charge level of the vehicle's battery, in
+  percent. tempC is a temperature; the provider does not document whether it is
+  ambient, battery or charger temperature.
+  Kempower builds DC fast chargers, so power, current and voltage most likely describe
+  the DC output to the vehicle; the provider has not confirmed this.
+
+format:
+  type: parquet
+  encoding: utf-8
+
+access:
+  landing_root_env: SECHA_LANDING_ROOT
+  layout: "vendor=kempower/source=public_passenger_dataset/export={export}/part={part}"
+  partition_keys: [export, part]
+  snapshot_selection: latest_by_fetched_at
+
+# No `record:` block. A Kempower row is identified by a session and an offset into it,
+# and the record block has no field for either. That is a gap in the metadata language,
+# to be closed in the hand-authored rulebook, not something a proposal should decide.
+
+defaults:
+  aggregation: average   # the avg prefix; the window itself is an open question
+  interval_s: 10         # the 10-second step in sampleTime10sIncrement
+
+# Candidate rules, identical to the other vendors so quality flags stay comparable.
+# Only those whose quantity is actually mapped reach validation.yaml.
+validation_defaults:
+  - {quantity: frequency,                 type: range, min: 45, max: 65,   on_fail: flag_suspect}
+  - {quantity: voltage,                   type: range, min: 0,  max: 1000, on_fail: flag_suspect}
+  - {quantity: power_factor,              type: range, min: -1, max: 1,    on_fail: flag_suspect}
+  - {quantity: displacement_power_factor, type: range, min: -1, max: 1,    on_fail: flag_suspect}
+
+catalog:
+  # The Parquet schema exactly as the export declares it: 13 columns, no units, no
+  # descriptions. Partner metadata, deliberately not committed to this repo.
+  path: "../../../secha-data-kempower/catalog_public_passenger_dataset.csv"
+  delimiter: ","
+  key_column: column
+  name_column: column
+  context_column: context
+  field_type: double
+  # Session identity, calendar attributes and the time offset are record structure,
+  # which propose.py never infers. Only the five measurement columns are proposed.
+  exclude_pattern: "^(transactionId|country|EVModel|year|month|quarter|weekday|sampleTime10sIncrement)$"

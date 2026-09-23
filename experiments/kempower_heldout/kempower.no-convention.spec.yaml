@@ -1,0 +1,54 @@
+# =============================================================================
+# Condition C0 of the Kempower held-out test: specs/kempower.spec.yaml with the
+# naming convention removed and nothing else changed (the catalog path is adjusted
+# only because this file sits two levels deeper). See PROTOCOL.md.
+# =============================================================================
+vendor: kempower
+source: public_passenger_dataset
+owner: "Kempower, shared over Delta Sharing; Spark export written by TAU"
+sensitivity: partner-confidential
+refresh_cadence: "one-off export"
+source_schema_version: "spark-export-95d29330"
+mapping_version: "0.1.0"
+target_schema_version: "1.0.0"
+
+shape: wide
+
+format:
+  type: parquet
+  encoding: utf-8
+
+access:
+  landing_root_env: SECHA_LANDING_ROOT
+  layout: "vendor=kempower/source=public_passenger_dataset/export={export}/part={part}"
+  partition_keys: [export, part]
+  snapshot_selection: latest_by_fetched_at
+
+# No `record:` block. A Kempower row is identified by a session and an offset into it,
+# and the record block has no field for either. That is a gap in the metadata language,
+# to be closed in the hand-authored rulebook, not something a proposal should decide.
+
+defaults:
+  aggregation: average   # the avg prefix; the window itself is an open question
+  interval_s: 10         # the 10-second step in sampleTime10sIncrement
+
+# Candidate rules, identical to the other vendors so quality flags stay comparable.
+# Only those whose quantity is actually mapped reach validation.yaml.
+validation_defaults:
+  - {quantity: frequency,                 type: range, min: 45, max: 65,   on_fail: flag_suspect}
+  - {quantity: voltage,                   type: range, min: 0,  max: 1000, on_fail: flag_suspect}
+  - {quantity: power_factor,              type: range, min: -1, max: 1,    on_fail: flag_suspect}
+  - {quantity: displacement_power_factor, type: range, min: -1, max: 1,    on_fail: flag_suspect}
+
+catalog:
+  # The Parquet schema exactly as the export declares it: 13 columns, no units, no
+  # descriptions. Partner metadata, deliberately not committed to this repo.
+  path: "../../../../secha-data-kempower/catalog_public_passenger_dataset.csv"
+  delimiter: ","
+  key_column: column
+  name_column: column
+  context_column: context
+  field_type: double
+  # Session identity, calendar attributes and the time offset are record structure,
+  # which propose.py never infers. Only the five measurement columns are proposed.
+  exclude_pattern: "^(transactionId|country|EVModel|year|month|quarter|weekday|sampleTime10sIncrement)$"

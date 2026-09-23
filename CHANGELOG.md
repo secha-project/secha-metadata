@@ -5,6 +5,16 @@ Repository-level changes to `secha-metadata`. Per-vendor mapping changes are log
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added (held-out test: Kempower)
+- `specs/kempower.spec.yaml`: the human-authored facts for drafting the third vendor, with a
+  naming convention written before any model saw the catalog.
+- `experiments/kempower_heldout/`: a pre-registered test of `propose.py` on a vendor nothing
+  was tuned on. `PROTOCOL.md` fixes the question, conditions, arms, blinding, predictions
+  and scoring in advance; `seal.py` records SHA-256 seals of inputs and outputs in the
+  append-only `SEALS.md`; `score.py` scores the sealed drafts against the hand-authored
+  rulebook and refuses to run on an uncommitted rulebook or a changed proposal.
+- `docs/onboarding-diary-kempower.md`: the RQ3 and RQ4 cost record for the third vendor,
+  including six things the canonical layer did not anticipate, found before authoring.
 ### Added (authoring: `propose.py`)
 - `propose.py` drafts a complete vendor directory (`source_schema.yaml`, `mapping.yaml`,
   `validation.yaml`, `CHANGELOG.md`) from a partner catalog plus a human-authored spec,

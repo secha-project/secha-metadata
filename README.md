@@ -34,12 +34,12 @@ meta-schemas/   JSON Schemas that validate the configs themselves
 vendors/<v>/    source_schema.yaml + mapping.yaml + validation.yaml + CHANGELOG.md
 tests/          fixtures (golden) + config-validity + lineage-drift tests
 specs/          propose.py inputs: the human-authored facts a draft cannot infer
-experiments/    research tooling, outside the CI-gated contract (see llm_mapping/)
+experiments/    research tooling, outside the CI-gated contract (llm_mapping/, kempower_heldout/)
 validate.py     schema + cross-reference + no-collapse + serving-view linter
 propose.py      drafts a whole vendor directory from a partner catalog, gated by validate
 lineage.py      generates docs/lineage_<vendor>.md from the configs
 review_sheet.py builds the domain-expert review workbook from the configs
-docs/           architecture diagrams + generated lineage reports + the onboarding diary
+docs/           architecture diagrams + generated lineage reports + the onboarding diaries
 ```
 
 ## Metadata types (YAML for human-authored config; JSON for the validators)
@@ -189,6 +189,11 @@ in the vendor `CHANGELOG.md` on every change.
 Proven twice: `mx_electrix` (wide JSON over an authenticated API) and `procem_kampusareena_pq`
 (long tab-separated triples from daily file archives). The measured onboarding cost of the second
 vendor is logged in [docs/onboarding-diary-procem.md](docs/onboarding-diary-procem.md).
+
+The third vendor, Kempower, is the held-out test: nothing was tuned on it. Its onboarding
+starts with a pre-registered, sealed `propose.py` draft
+([experiments/kempower_heldout/PROTOCOL.md](experiments/kempower_heldout/PROTOCOL.md)), and
+its cost is logged in [docs/onboarding-diary-kempower.md](docs/onboarding-diary-kempower.md).
 
 ## Develop
 ```bash
