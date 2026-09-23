@@ -6,7 +6,7 @@
 # (standards-aware, not standards-conformant).
 # `description` makes the canonical side self-documenting (used by lineage.py).
 # =============================================================================
-schema_version: "1.2.0"
+schema_version: "1.3.0"   # 1.3.0: state_of_charge, temperature; DC wording (Kempower)
 
 quantities:
   frequency:
@@ -16,15 +16,15 @@ quantities:
   voltage:
     default_unit: V
     standard_ref: "IEC 61000-4-30:2025 (voltage magnitude); EN 50160 limits"
-    description: "RMS voltage; phase-to-neutral (phase L1/L2/L3) or line-to-line (phase L1_L2/...)."
+    description: "RMS voltage; phase-to-neutral (phase L1/L2/L3), line-to-line (phase L1_L2/...), or a DC voltage (phase dc)."
   current:
     default_unit: A
     standard_ref: "IEC 61000-4-30:2025"
-    description: "RMS current per phase or neutral."
+    description: "RMS current per phase or neutral, or a DC current (phase dc)."
   active_power:
     default_unit: W
     standard_ref: "IEEE 1459-2010"
-    description: "Active (real) power. variant=fundamental for fundamental-only active power."
+    description: "Active (real) power. variant=fundamental for fundamental-only active power; phase dc for the power of a DC circuit."
   reactive_power:
     default_unit: var
     standard_ref: "IEEE 1459-2010"
@@ -83,3 +83,13 @@ quantities:
     default_unit: kvarh
     standard_ref: "IEC 62053"
     description: "Cumulative exported reactive energy counter."
+
+  # --- EV charging session quantities (added for Kempower, the first session source) ---
+  state_of_charge:
+    default_unit: percent
+    standard_ref: "ISO 15118-2 (EVRESSSOC); DIN SPEC 70121"
+    description: "State of charge of the vehicle's traction battery, as reported to the charger."
+  temperature:
+    default_unit: degC
+    standard_ref: "ISO 80000-5 (temperature)"
+    description: "Temperature. What is measured (ambient air, battery, charger) is not part of the quantity; each source documents it."

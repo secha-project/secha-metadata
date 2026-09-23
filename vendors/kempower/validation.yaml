@@ -1,0 +1,12 @@
+# Row-level validation for Kempower (in scope: row-level only).
+vendor: kempower
+rules:
+  # a reading without its session or its offset cannot be placed at all
+  - {field: transactionId,          type: not_null, on_fail: reject_row}
+  - {field: sampleTime10sIncrement, type: not_null, on_fail: reject_row}
+  - {quantity: state_of_charge, type: range, min: 0, max: 100,  on_fail: flag_suspect}
+  # the bound the AC vendors use, which also covers a DC charger (up to 1000 V); flags
+  # the 709 negative voltages in the export as suspect and keeps them
+  - {quantity: voltage,         type: range, min: 0, max: 1000, on_fail: flag_suspect}
+  # a missing cell in a wide source drops that emitted row, not the record
+  - {entity: measurement, field: value, type: not_null,         on_fail: drop_row}

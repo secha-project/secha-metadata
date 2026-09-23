@@ -3,14 +3,15 @@
 # Long-format measurement fact + thin dimensions. Vendor-agnostic.
 # Quantities live in quantity_vocabulary.yaml; units in units.yaml.
 # =============================================================================
-schema_version: "1.0.0"
+schema_version: "1.1.0"   # 1.1.0: phase dc (additive; Kempower)
 namespace: secha.canonical
 
 # Controlled vocabularies (the shared semantic layer). Quantities are separate
 # (quantity_vocabulary.yaml) so new vendors extend that file, not this one.
 enums:
   source_vendor: [mx_electrix, kempower, procem_schneider_pm3255, procem_kampusareena_pq]
-  phase: [L1, L2, L3, N, L1_L2, L2_L3, L3_L1, three_phase, none]
+  # dc: a direct-current quantity, which has no AC phase (a charger's DC output, a DC link)
+  phase: [L1, L2, L3, N, L1_L2, L2_L3, L3_L1, three_phase, dc, none]
   variant: [none, fundamental, fryze]
   aggregation: [instantaneous, average, minimum, maximum, counter]
   quality_flag: [ok, estimated, suspect, missing]

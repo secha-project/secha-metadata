@@ -128,3 +128,88 @@ c630de3009e553f7ec733511211c4c03e1d3fbda83b0dd455d951d97e2c2f8b2  .cache/propose
 a6109f304e917c70f45aa6f3d404cde1b27a112585c537cd45d6d1b5d89a52ca  .cache/propose/aviary-fgl-rd-tuni-fi/phi4-14b/cbe48393bc27c6800b51.json
 d61d41fca7e3991286ee7befa63ee8e27fc7d44be287036f5945545a642fbdb2  .cache/propose/aviary-fgl-rd-tuni-fi/phi4-14b/eab4b99b8582e23afcc2.json
 ```
+
+## run 2a: C0 for kimi-k3 (outputs; raw replies sealed with C1) (2026-09-23T10:43:16Z)
+
+```text
+0de6a875b6a934e10e8f339f3f3c5405e42bbea5f17758175786b165ad9bace7  proposals/kempower/C0-no-convention/kimi-k3/CHANGELOG.md
+a73945da4cf634584c05afa4fd0deec074806d0facd266cbba07a0883fe5927a  proposals/kempower/C0-no-convention/kimi-k3/mapping.yaml
+8d9ab11789e4e55b77d19ff7b5863c859819ce0371e17be71dc59a2ae36ae309  proposals/kempower/C0-no-convention/kimi-k3/PROPOSAL.md
+bfe59f14995e480261eb0f5a6269044f9e359566b2312e94b250a388123bb049  proposals/kempower/C0-no-convention/kimi-k3/run.log
+da49433b3d1d01eb3da81cd0606257e5001be1c436c3806083b185612dd657e1  proposals/kempower/C0-no-convention/kimi-k3/source_schema.yaml
+a9af24c8f6585092157a50cc0ff9c96a3001a908e7a9ba545f0c0aef7355fb3b  proposals/kempower/C0-no-convention/kimi-k3/staged/canonical/canonical_schema.yaml
+30f4613e68e3e890f061eb6773374fc38342af7d8c12640b748e48ab6bba74b6  proposals/kempower/C0-no-convention/kimi-k3/staged/canonical/quantity_vocabulary.yaml
+86db0e44a67b8f50b50d235b41a020bdb979d510b390d7b8a909122a83f3edf7  proposals/kempower/C0-no-convention/kimi-k3/staged/canonical/units.yaml
+ce8049f7db4d4e3faccb0dc4852e39d52c6ef2f49fec0db4cbdf756d4bbdf351  proposals/kempower/C0-no-convention/kimi-k3/staged/meta-schemas/mapping.schema.json
+fe416a50b9e95cd2d9ecfbc25473c76cd5dfff455ee9401e055fa9753b857afa  proposals/kempower/C0-no-convention/kimi-k3/staged/meta-schemas/propose_spec.schema.json
+dac9ebaa95c5db8a187dbd89c019a5c34755e0a63ea55b09828c582bc5f2cb1e  proposals/kempower/C0-no-convention/kimi-k3/staged/meta-schemas/source_schema.schema.json
+d2d5b1bb8cc3cd9841fc0bf11bf90716fe3c626d40b2d0f3c7e5b8d99d4faa1a  proposals/kempower/C0-no-convention/kimi-k3/staged/meta-schemas/validation.schema.json
+d804f05a27b327448d4e97a500b830788de39a8b1c29728dae86b238092642d0  proposals/kempower/C0-no-convention/kimi-k3/staged/serving/pq_minute_wide.sql
+d95cff2b56fec08dd24507621c3d529dac1267a4c8ec97a2609aa4d4868abfc5  proposals/kempower/C0-no-convention/kimi-k3/staged/targets/canonical.yaml
+fdf3775e41b54f5b275fdda3887808bc1a75ba899a419a037265d5c9a6539c7c  proposals/kempower/C0-no-convention/kimi-k3/staged/transforms/library.yaml
+0de6a875b6a934e10e8f339f3f3c5405e42bbea5f17758175786b165ad9bace7  proposals/kempower/C0-no-convention/kimi-k3/staged/vendors/kempower/CHANGELOG.md
+a73945da4cf634584c05afa4fd0deec074806d0facd266cbba07a0883fe5927a  proposals/kempower/C0-no-convention/kimi-k3/staged/vendors/kempower/mapping.yaml
+da49433b3d1d01eb3da81cd0606257e5001be1c436c3806083b185612dd657e1  proposals/kempower/C0-no-convention/kimi-k3/staged/vendors/kempower/source_schema.yaml
+cb4f9778421be5cfb875d93a6d174139539dd2fe5038415225757946176d764a  proposals/kempower/C0-no-convention/kimi-k3/staged/vendors/kempower/validation.yaml
+cb4f9778421be5cfb875d93a6d174139539dd2fe5038415225757946176d764a  proposals/kempower/C0-no-convention/kimi-k3/validation.yaml
+```
+
+## run 2b: C1 for kimi-k3 (outputs) and all ten kimi-k3 raw replies (2026-09-23T10:50:15Z)
+
+```text
+0de6a875b6a934e10e8f339f3f3c5405e42bbea5f17758175786b165ad9bace7  proposals/kempower/C1-convention/kimi-k3/CHANGELOG.md
+b841b008055d8215cf124d5212613978bff7a9ad33094f3ce140f4245cc2bd00  proposals/kempower/C1-convention/kimi-k3/mapping.yaml
+b1ef42a343752f622f27f4d8a67660f7c29051729fb1651e167299ba5be73303  proposals/kempower/C1-convention/kimi-k3/PROPOSAL.md
+de46f6374bde24ce94c6b0576f02932f2f272c7f199826231df16908e966407a  proposals/kempower/C1-convention/kimi-k3/run.log
+f740f58a314ebf0619ca67c1f99b668d324261c02b80bfa301625c8d212ec4a7  proposals/kempower/C1-convention/kimi-k3/source_schema.yaml
+6ddbac07fa0488b8517d740ccbb04d17d07b20d50f4fe168dc217290b3cb4878  proposals/kempower/C1-convention/kimi-k3/staged/canonical/canonical_schema.yaml
+94d5b2b9f4dc82d4756ba887bfa417f5a48be759bd14877c99f7faa288d3048c  proposals/kempower/C1-convention/kimi-k3/staged/canonical/quantity_vocabulary.yaml
+86db0e44a67b8f50b50d235b41a020bdb979d510b390d7b8a909122a83f3edf7  proposals/kempower/C1-convention/kimi-k3/staged/canonical/units.yaml
+a66dfc0cf71131c5ccfb3e7a4bc8c67c9037e626f5ae2936856cfa24a3f63d0c  proposals/kempower/C1-convention/kimi-k3/staged/meta-schemas/mapping.schema.json
+fe416a50b9e95cd2d9ecfbc25473c76cd5dfff455ee9401e055fa9753b857afa  proposals/kempower/C1-convention/kimi-k3/staged/meta-schemas/propose_spec.schema.json
+e0da7fb2ac16ef218a3f6cdd293c93e040b94b41feec68e20ec418f05cfa769f  proposals/kempower/C1-convention/kimi-k3/staged/meta-schemas/source_schema.schema.json
+d2d5b1bb8cc3cd9841fc0bf11bf90716fe3c626d40b2d0f3c7e5b8d99d4faa1a  proposals/kempower/C1-convention/kimi-k3/staged/meta-schemas/validation.schema.json
+0f797f0e221f5f092fef33daa18b4f77577e0d564d1ad11146ebb1c74e34be44  proposals/kempower/C1-convention/kimi-k3/staged/serving/pq_minute_wide.sql
+222070757518f42b15d8ede6f4df755e13e8ed6267cae466a0c12d3dabbeb4e4  proposals/kempower/C1-convention/kimi-k3/staged/targets/canonical.yaml
+fdf3775e41b54f5b275fdda3887808bc1a75ba899a419a037265d5c9a6539c7c  proposals/kempower/C1-convention/kimi-k3/staged/transforms/library.yaml
+0de6a875b6a934e10e8f339f3f3c5405e42bbea5f17758175786b165ad9bace7  proposals/kempower/C1-convention/kimi-k3/staged/vendors/kempower/CHANGELOG.md
+b841b008055d8215cf124d5212613978bff7a9ad33094f3ce140f4245cc2bd00  proposals/kempower/C1-convention/kimi-k3/staged/vendors/kempower/mapping.yaml
+f740f58a314ebf0619ca67c1f99b668d324261c02b80bfa301625c8d212ec4a7  proposals/kempower/C1-convention/kimi-k3/staged/vendors/kempower/source_schema.yaml
+cb4f9778421be5cfb875d93a6d174139539dd2fe5038415225757946176d764a  proposals/kempower/C1-convention/kimi-k3/staged/vendors/kempower/validation.yaml
+cb4f9778421be5cfb875d93a6d174139539dd2fe5038415225757946176d764a  proposals/kempower/C1-convention/kimi-k3/validation.yaml
+5d86efc8d313e0ec052360f0c2d1301fdd3e3ac3c9a5d59ffdfb638562470788  .cache/propose/integrate-api-nvidia-com/moonshotai/kimi-k3/0611511cb97b3c707753.json
+9bd459d1d505a08133c5ad4626d47b9ec0704f3982146d852bd8f4820c23aed4  .cache/propose/integrate-api-nvidia-com/moonshotai/kimi-k3/2d9b7b7200b19810e28a.json
+74e42dcac07487d0e06fc6b015bf9505a3620e70f09eececb345ccea6e5ee0b1  .cache/propose/integrate-api-nvidia-com/moonshotai/kimi-k3/46031e8f73678852f35e.json
+9bd459d1d505a08133c5ad4626d47b9ec0704f3982146d852bd8f4820c23aed4  .cache/propose/integrate-api-nvidia-com/moonshotai/kimi-k3/4b1c794508bdb31263e6.json
+5d86efc8d313e0ec052360f0c2d1301fdd3e3ac3c9a5d59ffdfb638562470788  .cache/propose/integrate-api-nvidia-com/moonshotai/kimi-k3/8b5c66fd0e3e8774fd0c.json
+2e15ed4c238632c3007b54234789f2f510389884e723b69b72a1ceefe907cb94  .cache/propose/integrate-api-nvidia-com/moonshotai/kimi-k3/96a3e1b25839db25e03c.json
+b924e1e17fb518eb60b64e02dba4b4d2c49f861b7ebe7b0c63dc2b7a63b0789d  .cache/propose/integrate-api-nvidia-com/moonshotai/kimi-k3/9c47c7dd36ac655b1222.json
+74e42dcac07487d0e06fc6b015bf9505a3620e70f09eececb345ccea6e5ee0b1  .cache/propose/integrate-api-nvidia-com/moonshotai/kimi-k3/aa70f6ee25a83fb5fcb5.json
+485af4e45fdeeb6d0d645c9c3f1a3bc30d739ed596f66acb16b4813deafdbe98  .cache/propose/integrate-api-nvidia-com/moonshotai/kimi-k3/cbfc6378468fd91d5e5a.json
+485af4e45fdeeb6d0d645c9c3f1a3bc30d739ed596f66acb16b4813deafdbe98  .cache/propose/integrate-api-nvidia-com/moonshotai/kimi-k3/ef2467d75f4b9b4468a2.json
+```
+
+## gold: hand-authored rulebook and the generic changes it needs, before any proposal was opened (2026-09-23T10:51:29Z)
+
+```text
+ea497c1fdb6d2855d3449a4399c245a02cb6b9117109d6b2cb4300fa4416abae  vendors/kempower/CHANGELOG.md
+b9b35b720c3414495f9368bfd55ae13ab945a463fcfd1b33aa544e15683109b2  vendors/kempower/mapping.yaml
+fc02f3a1c992857b986500cecb067454b36bbbc9543f31287a8d36c70e2b708f  vendors/kempower/source_schema.yaml
+4783084c03dd926f6861a5eba07b7f48b77dfbc3dd27de3135ff44d5983870b8  vendors/kempower/validation.yaml
+6ddbac07fa0488b8517d740ccbb04d17d07b20d50f4fe168dc217290b3cb4878  canonical/canonical_schema.yaml
+94d5b2b9f4dc82d4756ba887bfa417f5a48be759bd14877c99f7faa288d3048c  canonical/quantity_vocabulary.yaml
+86db0e44a67b8f50b50d235b41a020bdb979d510b390d7b8a909122a83f3edf7  canonical/units.yaml
+e0da7fb2ac16ef218a3f6cdd293c93e040b94b41feec68e20ec418f05cfa769f  meta-schemas/source_schema.schema.json
+a66dfc0cf71131c5ccfb3e7a4bc8c67c9037e626f5ae2936856cfa24a3f63d0c  meta-schemas/mapping.schema.json
+1be8f479a3ff56f5be887882a7c840f395b81e78f9aa6c02030239763ea49895  validate.py
+222070757518f42b15d8ede6f4df755e13e8ed6267cae466a0c12d3dabbeb4e4  targets/canonical.yaml
+0f797f0e221f5f092fef33daa18b4f77577e0d564d1ad11146ebb1c74e34be44  serving/pq_minute_wide.sql
+c1a01d0134e0811770e6547f80560029d14af51422c226e019366445f2305555  docs/lineage_kempower.md
+341338777c31926555a337537158b38ea49368baf62a5b6b7de7f0727b19b435  tests/test_validator_units.py
+```
+
+## protocol with deviations D1 and D2 appended (2026-09-23T10:52:56Z)
+
+```text
+722fd7118df30c9106245b83d6b4e19953c2d5e0c91fb7552e4b9f5c24126797  experiments/kempower_heldout/PROTOCOL.md
+```

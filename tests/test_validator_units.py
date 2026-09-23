@@ -4,6 +4,7 @@ from pathlib import Path
 
 from validate import (
     _check_column,
+    _check_no_collapse,
     _check_reference_dimensions,
     _check_serving_views,
     _check_source_blocks,
@@ -160,6 +161,71 @@ def test_long_shape_requires_record_interpretation_fields() -> None:
     errors = _source_errors(schema)
     assert any("requires record.value_field" in e for e in errors)
     assert any("requires record.timestamp_field" in e for e in errors)
+
+
+# --- session sources (charging sessions, no clock time) ----------------------------------
+
+SESSION_CTX = {**CTX, "session_attributes": {"ev_model", "country", "cal_year"}}
+SESSION_FIELDS = [
+    {"name": "transactionId", "type": "string"},
+    {"name": "offset", "type": "int"},
+    {"name": "EVModel", "type": "string"},
+]
+
+
+def _session_errors(source_schema: dict) -> list[str]:
+    errors: list[str] = []
+    _check_source_blocks({"fields": SESSION_FIELDS, **source_schema}, SESSION_CTX, errors, "t")
+    return errors
+
+
+def test_valid_session_block_passes() -> None:
+    session = {"id_field": "transactionId", "offset_field": "offset"}
+    session["attributes"] = {"ev_model": "EVModel"}
+    assert _session_errors({"session": session}) == []
+
+
+def test_session_field_typo_is_caught() -> None:
+    """A typo'd offset field would leave every reading without its place in the session."""
+    errors = _session_errors({"session": {"id_field": "transactionId", "offset_field": "ofset"}})
+    assert any("session.offset_field 'ofset'" in e for e in errors)
+
+
+def test_session_attribute_must_be_a_charging_session_field() -> None:
+    """An attribute the entity does not have would be dropped silently by the engine."""
+    session = {"id_field": "transactionId", "attributes": {"ev_modle": "EVModel"}}
+    errors = _session_errors({"session": session})
+    assert any("'ev_modle' is not a charging_session field" in e for e in errors)
+
+
+def test_session_attribute_must_read_a_real_field() -> None:
+    session = {"id_field": "transactionId", "attributes": {"country": "Country"}}
+    errors = _session_errors({"session": session})
+    assert any("reads 'Country'" in e for e in errors)
+
+
+def test_a_row_has_one_identity() -> None:
+    """A row key and a positional id together would make the identity ambiguous."""
+    record = {"row_id_field": "transactionId", "row_id_from": "payload_position"}
+    assert any("are exclusive" in e for e in _session_errors({"record": record}))
+
+
+def test_wide_columns_differing_only_in_aggregation_do_not_collapse() -> None:
+    """A sampled and an averaged reading of one quantity are distinct canonical rows."""
+    mapping = {
+        "columns": [
+            {"src": "u", "quantity": "voltage", "phase": "L1", "unit": "V"},
+            {"src": "u_inst", "quantity": "voltage", "phase": "L1", "unit": "V"},
+        ]
+    }
+    errors: list[str] = []
+    _check_no_collapse(mapping, errors, "t")
+    assert any("[collapse]" in e for e in errors)
+
+    mapping["columns"][1]["aggregation"] = "instantaneous"
+    errors = []
+    _check_no_collapse(mapping, errors, "t")
+    assert errors == []
 
 
 # --- serving-view guards ----------------------------------------------------------------

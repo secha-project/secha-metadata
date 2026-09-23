@@ -9,6 +9,8 @@
 -- Consumers get one friendly wide row per device-minute; the long canonical fact stays the
 -- interoperability substrate underneath. Quantities a vendor does not provide are NULL.
 -- Only quality = 'ok' readings contribute (flagged values are excluded, per the EE ask).
+-- A minute view needs clock time: sources that only count time from a session start
+-- (Kempower) have no ts_utc and would otherwise form one NULL-minute row per device.
 SELECT
     source_vendor,
     device_id,
@@ -31,6 +33,7 @@ SELECT
     count(*) AS source_rows
 FROM {canonical}
 WHERE quality = 'ok'
+  AND ts_utc IS NOT NULL
 GROUP BY
     source_vendor,
     device_id,

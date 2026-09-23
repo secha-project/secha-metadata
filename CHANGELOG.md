@@ -15,6 +15,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
   rulebook and refuses to run on an uncommitted rulebook or a changed proposal.
 - `docs/onboarding-diary-kempower.md`: the RQ3 and RQ4 cost record for the third vendor,
   including six things the canonical layer did not anticipate, found before authoring.
+### Added (vendor #3: Kempower, hand-authored before any draft was opened)
+- `vendors/kempower/`: the passenger charging dataset. Five measurement columns
+  (state of charge, temperature, and the DC output's power, current and voltage); the
+  session, its attributes and the time offset are declared in the source schema.
+- Quantity vocabulary 1.3.0: `state_of_charge` (percent) and `temperature` (degC); voltage,
+  current and active power are described for DC as well as AC.
+- Canonical schema 1.1.0: phase `dc`, for a direct-current quantity. Additive; existing
+  mappings keep target schema 1.0.0.
+- Source schemas can declare a `session:` block (session id, offset in seconds, and
+  `charging_session` attributes) and `record.row_id_from: payload_position` for a source
+  with no row key. The validator checks both, and that a session attribute names a real
+  `charging_session` field.
+- Wide `columns:` entries can carry an `aggregation` override, as long `rows:` entries
+  already could, and the no-collapse check counts it.
+### Changed
+- `pq_minute_wide` requires `ts_utc`: a source without clock time would otherwise form one
+  NULL-minute row per device. Nothing changes for MX Electrix or ProCem.
 ### Added (authoring: `propose.py`)
 - `propose.py` drafts a complete vendor directory (`source_schema.yaml`, `mapping.yaml`,
   `validation.yaml`, `CHANGELOG.md`) from a partner catalog plus a human-authored spec,

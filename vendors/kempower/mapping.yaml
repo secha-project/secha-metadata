@@ -1,0 +1,19 @@
+# Kempower passenger charging dataset -> canonical (LAV per-source mapping).
+# Hand-authored for the held-out test before any machine draft was opened
+# (experiments/kempower_heldout/PROTOCOL.md); this file is the gold that score.py uses.
+#
+# Five of the thirteen columns are measurements. The other eight are the session, its
+# attributes and the time offset, declared in source_schema.yaml (session, record).
+vendor: kempower
+mapping_version: "1.0.0"
+target_schema_version: "1.1.0"   # needs phase dc
+source: public_passenger_dataset
+
+columns:
+  # vehicle and environment: sampled values (no avg prefix), so instantaneous
+  - {src: soc,   quantity: state_of_charge, phase: none, unit: percent, aggregation: instantaneous, transform: none}
+  - {src: tempC, quantity: temperature,     phase: none, unit: degC,    aggregation: instantaneous, transform: none}
+  # charger output: averages over the 10-second step (the source default), DC
+  - {src: avgPowerW,   quantity: active_power, phase: dc, unit: W, transform: none}
+  - {src: avgCurrentA, quantity: current,      phase: dc, unit: A, transform: none}
+  - {src: avgVoltageV, quantity: voltage,      phase: dc, unit: V, transform: none}

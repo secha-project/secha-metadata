@@ -1,0 +1,81 @@
+# --- header stub (onboarding/audit only; NOT a data-contract framework) ---
+# Hand-authored for the held-out test before any machine draft was opened
+# (experiments/kempower_heldout/PROTOCOL.md).
+vendor: kempower
+source: public_passenger_dataset
+owner: "Kempower, shared over Delta Sharing; Spark export written by TAU"
+sensitivity: partner-confidential        # "public" in the table name is unconfirmed
+refresh_cadence: "one-off export"
+source_schema_version: "spark-export-95d29330"   # the Spark write job; no Delta table version was recorded
+
+shape: wide
+
+# The same grammar the propose.py spec gives a model (specs/kempower.spec.yaml).
+naming_convention: |
+  There is no catalog beyond the column names, which are camelCase English words and
+  abbreviations. Each row is one sample of one charging session, taken at a 10-second
+  step: transactionId identifies the session and sampleTime10sIncrement counts the
+  seconds since it started.
+  The prefix avg means the value is an average over the sampling step; the provider
+  does not document the averaging window.
+  A trailing capital letter is the unit: W watts, A amperes, V volts. In tempC the
+  trailing C means degrees Celsius.
+  soc abbreviates state of charge: the charge level of the vehicle's battery, in
+  percent. tempC is a temperature; the provider does not document whether it is
+  ambient, battery or charger temperature.
+  Kempower builds DC fast chargers, so power, current and voltage most likely describe
+  the DC output to the vehicle; the provider has not confirmed this.
+
+# --- format / access descriptor (how to READ + PARSE the raw) ---
+format:
+  type: parquet                           # snappy Parquet parts, landed verbatim
+  encoding: utf-8                         # Parquet strings
+
+access:
+  landing_root_env: SECHA_LANDING_ROOT
+  layout: "vendor=kempower/source=public_passenger_dataset/export={export}/part={part}"
+  partition_keys: [export, part]
+  snapshot_selection: latest_by_fetched_at
+
+# --- record-level interpretation ---
+record:
+  # No clock time, so ts_utc stays null and the row id carries identity. The source has
+  # no row key, and 17.8% of rows share a session and offset with another row, so the id
+  # is the row's position in its landed part, which never changes once landed.
+  row_id_from: payload_position
+  # The dataset names no charger and no site; one device stands for the whole dataset.
+  device_id_template: "kempower:public_passenger_dataset"
+
+# --- charging sessions: the grain this source is organised by ---
+session:
+  id_field: transactionId
+  offset_field: sampleTime10sIncrement    # seconds since the session started
+  attributes:                             # charging_session field: source field
+    ev_model: EVModel                     # verbatim; sometimes two candidate models
+    country: country
+    cal_year: year
+    cal_month: month
+    weekday: weekday
+  # Not mapped: ev_brand (EVModel can name two brands, so a brand would be a guess) and
+  # quarter (it follows from month). All five attributes are constant within every
+  # session in the export (checked 2026-09-23).
+
+# --- source-level canonical defaults for this 10-second sample stream ---
+defaults:
+  aggregation: average                    # the avg prefix; soc and tempC override it
+  interval_s: 10
+
+fields:
+  - {name: transactionId,          type: string, unit: null,    nullable: true, desc: "Charging session identifier, a 64-character hexadecimal pseudonym. No vendor description."}
+  - {name: country,                type: string, unit: null,    nullable: true, desc: "Country of the charging session."}
+  - {name: EVModel,                type: string, unit: null,    nullable: true, desc: "Vehicle model as free text; sometimes two candidate models, comma-separated."}
+  - {name: year,                   type: int,    unit: null,    nullable: true, desc: "Calendar year of the session. The source has no date or clock time."}
+  - {name: month,                  type: int,    unit: null,    nullable: true, desc: "Calendar month (1 to 12) of the session."}
+  - {name: quarter,                type: int,    unit: null,    nullable: true, desc: "Calendar quarter (1 to 4) of the session."}
+  - {name: weekday,                type: string, unit: null,    nullable: true, desc: "English weekday name of the session."}
+  - {name: sampleTime10sIncrement, type: int,    unit: s,       nullable: true, desc: "Seconds since the session started, in 10-second steps."}
+  - {name: soc,                    type: float,  unit: percent, nullable: true, desc: "State of charge of the vehicle's battery. No avg prefix; the unit is not declared."}
+  - {name: tempC,                  type: float,  unit: degC,    nullable: true, desc: "Temperature in degrees Celsius; ambient, battery or charger is undocumented."}
+  - {name: avgPowerW,              type: float,  unit: W,       nullable: true, desc: "Average power over the sampling step; most likely the DC output to the vehicle."}
+  - {name: avgCurrentA,            type: float,  unit: A,       nullable: true, desc: "Average current over the sampling step; most likely the DC output to the vehicle."}
+  - {name: avgVoltageV,            type: float,  unit: V,       nullable: true, desc: "Average voltage over the sampling step; most likely the DC output to the vehicle."}

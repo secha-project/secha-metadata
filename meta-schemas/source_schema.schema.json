@@ -46,9 +46,31 @@
         "meter_field": { "type": "string" },
         "timestamp_field": { "type": "string" },
         "row_id_field": { "type": "string" },
+        "row_id_from": {
+          "enum": ["payload_position"],
+          "description": "For a source with no row key: the row's position in its landed payload, which is immutable once landed. Exclusive with row_id_field."
+        },
         "key_field": { "type": "string" },
         "value_field": { "type": "string" },
         "device_id_template": { "type": "string" }
+      }
+    },
+    "session": {
+      "type": "object",
+      "description": "For sources whose rows belong to charging sessions: which field identifies the session, which counts seconds from its start, and which fields fill the charging_session entity.",
+      "required": ["id_field"],
+      "additionalProperties": false,
+      "properties": {
+        "id_field": { "type": "string" },
+        "offset_field": {
+          "type": "string",
+          "description": "Seconds since the session started; becomes ts_session_offset_s."
+        },
+        "attributes": {
+          "type": "object",
+          "description": "charging_session field name to source field name.",
+          "additionalProperties": { "type": "string" }
+        }
       }
     },
     "defaults": {

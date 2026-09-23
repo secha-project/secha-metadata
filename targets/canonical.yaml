@@ -12,7 +12,10 @@ merge_key: [measurement_id]
 measurement_id_from:                   # deterministic surrogate (idempotency); the full identity
   # tuple INCLUDING aggregation, so min/max/mean variants of the same quantity never collide
   [source_vendor, device_id, ts_utc, quantity, phase, variant, harmonic_order, aggregation, source_row_id]
-partition_by: [source_vendor, event_date]
+# A source with no clock time (Kempower) has ts_utc null, so source_row_id carries its
+# identity; with no row key in the source, that is the row's position in its immutable
+# landed payload (record.row_id_from). Existing ids are unchanged by this rule.
+partition_by: [source_vendor, event_date]   # event_date is null for a source without clock time
 # cluster_by: [source_vendor, device_id, ts_utc]   # Databricks liquid clustering (deferred)
 
 # Platform conformance (learned via the Phase-3 handshake, 2026-07-14): this Unity Catalog

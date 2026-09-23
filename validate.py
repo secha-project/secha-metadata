@@ -7,7 +7,8 @@ Three layers:
    factor fields exist in device_factors; harmonic quantities carry harmonic_order
    (generated rules for wide sources, explicit rows entries for long ones); long-shape
    `rows:` mappings are consistent with the declared source shape and record block;
-   record/defaults blocks reference real fields; golden fixtures conform to the vocabulary.
+   record/defaults/session blocks reference real fields, and session attributes name real
+   charging_session fields; golden fixtures conform to the vocabulary.
 3. No-collapse: no two mapped columns/rows share a canonical identity tuple.
 
 Plus serving-view guards: each serving/<name>.sql must be a single SELECT/WITH over the
@@ -122,6 +123,30 @@ def _check_source_blocks(source_schema: dict, ctx: dict, errors: list[str], labe
         for key in ("key_field", "value_field", "timestamp_field"):
             if not record.get(key):
                 errors.append(f"[xref] {label}: shape 'long' requires record.{key}")
+    if record.get("row_id_field") and record.get("row_id_from"):
+        errors.append(
+            f"[xref] {label}: record.row_id_field and record.row_id_from are exclusive "
+            "(a row has one identity)"
+        )
+
+    session = source_schema.get("session") or {}
+    for key in ("id_field", "offset_field"):
+        value = session.get(key)
+        if value is not None and value not in field_names:
+            errors.append(f"[xref] {label}: session.{key} '{value}' not in source_schema.fields")
+    known = ctx.get("session_attributes", set())
+    for attribute, field in (session.get("attributes") or {}).items():
+        if attribute not in known:
+            errors.append(
+                f"[xref] {label}: session attribute '{attribute}' is not a charging_session "
+                f"field (known: {sorted(known)})"
+            )
+        if field not in field_names:
+            errors.append(
+                f"[xref] {label}: session attribute '{attribute}' reads '{field}', "
+                "which is not in source_schema.fields"
+            )
+
     template = record.get("device_id_template")
     if template is not None:
         for placeholder in re.findall(r"\{(\w+)\}", template):
@@ -144,8 +169,8 @@ def _check_no_collapse(mapping: dict, errors: list[str], label: str) -> None:
     """No two mapped columns/rows may share a canonical identity tuple.
 
     Identity = (quantity, phase, variant, harmonic_order, aggregation); two entries sharing it
-    collapse into indistinguishable canonical rows. Wide columns cannot yet express a per-column
-    aggregation (held at None); long `rows:` entries contribute their override.
+    collapse into indistinguishable canonical rows. Wide `columns:` and long `rows:` entries
+    both contribute their aggregation override; generated rules have none.
     """
     seen: dict[tuple, list[str]] = {}
 
@@ -161,7 +186,14 @@ def _check_no_collapse(mapping: dict, errors: list[str], label: str) -> None:
         seen.setdefault(key, []).append(src)
 
     for col in mapping.get("columns", []):
-        record(col["src"], col["quantity"], col["phase"], col.get("variant", "none"), None)
+        record(
+            col["src"],
+            col["quantity"],
+            col["phase"],
+            col.get("variant", "none"),
+            None,
+            col.get("aggregation"),
+        )
     for gen in mapping.get("generated", []):
         for order in gen["order"]:
             for idx, phase in gen["phase_map"].items():
@@ -301,6 +333,9 @@ def validate(root: Path = ROOT) -> list[str]:
         "aggregations": set(canon["enums"]["aggregation"]),
         "qualities": set(canon["enums"]["quality_flag"]),
         "rules": library["rules"],
+        # engine-set fields excluded: a source fills only what describes the session
+        "session_attributes": {f["name"] for f in canon["entities"]["charging_session"]["fields"]}
+        - {"session_id", "source_vendor", "schema_version"},
     }
     entities = set(canon["entities"])
 

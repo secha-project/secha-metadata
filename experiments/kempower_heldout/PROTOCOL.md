@@ -119,3 +119,27 @@ failures and are excluded, as in the benchmark.
 ## Deviations
 
 None yet. Any change after sealing is appended here with its date and reason.
+
+### D1, 2026-09-23: the kimi-k3 C1 gate ran against the extended rulebook
+
+`propose.py` builds its prompt from the vocabulary when a run starts and runs the validator
+gate when it ends. The optional `kimi-k3` arm ran C1 from about 10:31 to 10:50 UTC; the
+rulebook was extended (vocabulary 1.3.0, phase `dc`, two meta-schema additions) at about
+10:45, while that run was in flight. The model was prompted with the frozen vocabulary, so
+its answers are unaffected, and `score.py` checks entry validity against the frozen commit,
+so the scores are unaffected. Only the whole-draft gate count in that run's `PROPOSAL.md`
+is: it reads clean, because it was checked against the extended rulebook.
+
+The gate was recomputed against the frozen rulebook (`cd564b9`) from the sealed draft
+files, reading counts only. The method reproduces the recorded count of all five
+unaffected runs exactly; for `kimi-k3` C1 it gives 5 problems, and 5 is the figure to
+report. Cause: shared rulebook files were edited while a sealed run was still running.
+From now on no shared rulebook file changes while a run is in progress.
+
+The gold (`vendors/kempower/`) was written at 10:48:34 to 10:48:44 UTC, before the run
+ended and before its status was seen; it was sealed at 10:51:29 UTC. The only thing learned
+from the affected status line was a count.
+
+### D2, 2026-09-23: kimi-k3 is included
+
+It answered all ten points, meeting the condition set above for the optional arm.

@@ -187,7 +187,9 @@ in the vendor `CHANGELOG.md` on every change.
 3. Run `python validate.py` and `python lineage.py`; open a PR. CI gates it. **No engine change.**
 
 Proven twice: `mx_electrix` (wide JSON over an authenticated API) and `procem_kampusareena_pq`
-(long tab-separated triples from daily file archives). The measured onboarding cost of the second
+(long tab-separated triples from daily file archives). The third, `kempower` (charging
+sessions in a Parquet export, with no clock time), is configured; the engine capabilities it
+needs are the next step. The measured onboarding cost of the second
 vendor is logged in [docs/onboarding-diary-procem.md](docs/onboarding-diary-procem.md).
 
 The third vendor, Kempower, is the held-out test: nothing was tuned on it. Its onboarding

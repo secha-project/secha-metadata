@@ -93,7 +93,46 @@ declares no units and no descriptions: `transactionId`, `country`, `EVModel`, `y
   service reports. The reachability probe the same morning recorded `ollama/phi4:14b` and
   `codestral-2508` as served.
 
-### Next: Step 2, the rulebook by hand, blind
-The rulebook is authored without opening `proposals/kempower/`, timed from the first
-decision to the commit, and committed before `score.py` is run. The decisions listed
-above under "Not anticipated" are its agenda.
+### 2026-09-23, Step 2: the rulebook by hand, blind (10:42:57 to 10:51:29 UTC)
+- **Decisions.** Eight, prepared from the analysis in Step 1 and accepted as recommended at
+  10:42 UTC: new quantities `state_of_charge` and `temperature` (ask the provider what
+  `tempC` measures); phase `dc` for the charger output; a row identity that keeps every
+  reading; `event_date` left null; one dataset-level device; vehicle model verbatim, no
+  brand, no quarter; bounds 0 to 100 % for state of charge and 0 to 1000 V for voltage.
+- **One decision refined while authoring.** Adding `session_id` and `ts_session_offset_s`
+  to the merge key would change the id of every existing MX Electrix and ProCem row, since
+  the engine hashes the declared field list, and a reload would duplicate 5.5 million rows.
+  The key already holds `source_row_id`. Giving each Kempower row its position in its
+  immutable landed part as that id keeps every reading, both rows of a repeated session
+  and offset included, and leaves every existing id unchanged. The merge key did not change.
+- **Two things found while authoring.** `soc` and `tempC` have no `avg` prefix, so they
+  are samples while the other three columns are averages, and a wide mapping could not
+  say so: only long `rows:` could carry an aggregation. Wide `columns:` now can, and the
+  no-collapse check counts it. And `pq_minute_wide` would have grouped Kempower rows, which
+  have no clock time, into one NULL-minute row per device; it now requires `ts_utc`.
+- **Checked in the data:** the five session attributes are constant within every session
+  across all 99 parts. 96 sessions straddle two parts, which is harmless because
+  `charging_session` merges on `session_id`.
+- **Counts.** Vendor YAML: 103 non-blank lines (source schema 73, mapping 18, validation
+  12), against ProCem's 176. Canonical: two quantities, `dc` in the phase enum, and DC
+  wording for voltage, current and active power (vocabulary 1.3.0, canonical schema 1.1.0);
+  ProCem needed none. Generic tooling: meta-schemas +23 lines (a `session` block,
+  `record.row_id_from`, per-column `aggregation`), `validate.py` +39, six new validator
+  tests, one serving guard line, comments in the target binding. Engine: 0 lines so far.
+- **Gates:** `validate.py` clean for three vendors, lineage generated, 63 metadata tests
+  pass, and the `secha-transform` suite passes against this metadata (53 passed, 1 skipped
+  that needs the platform).
+- **Sealed** at 10:51:29 UTC, before any proposal was opened.
+- **`kimi-k3`** answered all ten points and is included. Its C1 gate ran against the
+  extended rulebook (protocol deviation D1); recomputed against the frozen rulebook, it has
+  5 problems, not 0.
+- **Effort caveat.** Writing took 8.5 minutes once the decisions were made; the analysis
+  behind them is part of Step 1. "By hand" means the researcher's decisions written with
+  the same assistant-supported workflow as the ProCem diary, and the correction effort will
+  be measured in that same workflow, so the comparison is like for like.
+
+### Next
+1. Commit the rulebook, then run `score.py`: it refuses to score before the commit.
+2. C2: the same arms and conditions against vocabulary 1.3.0, sealed before scoring.
+3. Engine capabilities for the transform step: a Parquet reader, the export and part
+   layout, session fields, the positional row id, and a null `event_date`.
