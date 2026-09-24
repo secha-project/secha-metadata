@@ -1,0 +1,4 @@
+[
+  {"session_id": "kempower:session:0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a", "source_vendor": "kempower", "ev_model": "Example EV", "ev_brand": null, "country": "Finland", "cal_year": 2025, "cal_month": 3, "weekday": "Monday", "schema_version": "1.1.0"},
+  {"session_id": "kempower:session:0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b", "source_vendor": "kempower", "ev_model": "Example EV, Other EV", "ev_brand": null, "country": "Norway", "cal_year": 2024, "cal_month": 12, "weekday": "Sunday", "schema_version": "1.1.0"}
+]

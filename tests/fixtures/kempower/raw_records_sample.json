@@ -1,0 +1,12 @@
+{
+  "description": "Synthetic records shaped like the Kempower export (not partner data). The golden test lands them as one Parquet payload in the partition below; source_row_id in the expected rows names that partition and each record's index in the payload.",
+  "partition": {"export": "0f1e2d3c", "part": "00000-c000"},
+  "records": [
+    {"transactionId": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a", "country": "Finland", "EVModel": "Example EV", "year": 2025, "month": 3, "quarter": 1, "soc": 20.0, "tempC": 12.0, "sampleTime10sIncrement": 0, "weekday": "Monday", "avgPowerW": 1500.0, "avgCurrentA": 4.0, "avgVoltageV": 375.0},
+    {"transactionId": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a", "country": "Finland", "EVModel": "Example EV", "year": 2025, "month": 3, "quarter": 1, "soc": 21.0, "tempC": 12.0, "sampleTime10sIncrement": 10, "weekday": "Monday", "avgPowerW": 90000.0, "avgCurrentA": 240.0, "avgVoltageV": 375.0},
+    {"transactionId": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a", "country": "Finland", "EVModel": "Example EV", "year": 2025, "month": 3, "quarter": 1, "soc": 22.0, "tempC": 12.5, "sampleTime10sIncrement": 10, "weekday": "Monday", "avgPowerW": 91000.0, "avgCurrentA": 241.0, "avgVoltageV": 377.5},
+    {"transactionId": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a", "country": "Finland", "EVModel": "Example EV", "year": 2025, "month": 3, "quarter": 1, "soc": 22.0, "tempC": null, "sampleTime10sIncrement": 20, "weekday": "Monday", "avgPowerW": 80000.0, "avgCurrentA": 250.0, "avgVoltageV": -12.0},
+    {"transactionId": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b", "country": "Norway", "EVModel": "Example EV, Other EV", "year": 2024, "month": 12, "quarter": 4, "soc": 101.0, "tempC": -5.0, "sampleTime10sIncrement": 0, "weekday": "Sunday", "avgPowerW": 50000.0, "avgCurrentA": 120.0, "avgVoltageV": 420.0},
+    {"transactionId": null, "country": "Norway", "EVModel": "Example EV, Other EV", "year": 2024, "month": 12, "quarter": 4, "soc": 50.0, "tempC": 1.0, "sampleTime10sIncrement": 10, "weekday": "Sunday", "avgPowerW": 1.0, "avgCurrentA": 1.0, "avgVoltageV": 1.0}
+  ]
+}

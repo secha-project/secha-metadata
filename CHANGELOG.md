@@ -5,6 +5,14 @@ Repository-level changes to `secha-metadata`. Per-vendor mapping changes are log
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added (vendor #3: the Kempower golden contract)
+- `tests/fixtures/kempower/`: six synthetic records shaped like the export (it is partner data,
+  so none of it is copied), with the 24 canonical rows and 2 charging_session rows the rulebook
+  demands, written out literally rather than produced by the engine. They cover two readings at
+  one session offset kept apart, a missing temperature, a negative voltage and a state of charge
+  above 100 flagged suspect, and a record with no session rejected. `validate.py` checks the
+  expected rows against the vocabulary; `secha-transform` lands the records as Parquet and must
+  reproduce them exactly.
 ### Added (held-out test: verification)
 - `experiments/kempower_heldout/verify_seals.py`: checks every seal the way an examiner with a
   fresh clone would. A committed file must match some commit of the repository, in LF or in the

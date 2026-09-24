@@ -155,8 +155,38 @@ declares no units and no descriptions: `transactionId`, `country`, `EVModel`, `y
 - 2026-09-24: all 337 seals verify from a fresh clone (`verify_seals.py`); the 300 drafts and
   model replies, which the repository does not hold, are archived with the partner catalog.
 
+### 2026-09-24, Step 4: the engine (≈0.4 h, 09:43 to 10:07 UTC, then a 2.3 h unattended run)
+- **Five generic capabilities in `secha-transform`, zero vendor logic:** Parquet payloads read
+  in streamed batches; access layouts with any placeholders (`export`/`part` as well as
+  `date`/`meter`); row ids from a row's position in its immutable landed part; sessions
+  (`session_id` and `ts_session_offset_s` on every row, one `charging_session` row per
+  session, typed from the canonical schema); rows without a date, whose `event_date` is a
+  real null. Plus per-column aggregation, and a generic `secha-transform run <vendor>`, so the
+  third vendor needed no command of its own. No vendor name appears in the engine or IO code.
+- **Counts:** +243 lines of code, all generic: engine and model 62, about what ProCem's engine
+  change was (about 60); reader 59, writer 37, the generic command 84, config 1.
+  Vendor-specific code: 0 lines.
+  Metadata: the golden contract (6 synthetic records, 24 expected rows, 2 sessions).
+- **Traps the new source exposed, all generic and all fixed:** the writer stored the string
+  `"unknown"` as `event_date`, which the Delta table's DATE column would reject; files typed
+  their columns per batch, so an all-null `ts_utc` clashed with other vendors' files (now one
+  fixed schema); pyarrow cannot infer a partition type when every `event_date` is null (the
+  writer now declares its partitioning for readers); a session spanning two batches was
+  written twice (now once per landed part); and `dataclasses.asdict` took over half the run
+  time (removed; output identical on 500,000 rows).
+- **Full real run (10:07:36 to 12:24:44 UTC, 8,228 s, about 8,700 records a second):** 99
+  parts, **71,793,566 records into 358,967,830 canonical rows** and 396,848 sessions; 709
+  suspect, 0 dropped, 0 rejected, 0 unmapped; 14 GB of canonical Parquet.
+- **Reconciled against the raw parts, independently of the engine:** rows equal the raw
+  non-empty cells, per quantity; the value sums match for all five quantities; aggregation and
+  phase are as the rulebook says; the 709 suspect readings are exactly the 709 negative
+  voltages found when the export was first profiled; distinct sessions equal the raw distinct
+  `transactionId`s. The session dataset holds 96 extra rows, precisely the 96 sessions that
+  straddle two parts, merged on `session_id` at load. `measurement_id` is unique in every part.
+- **Gates:** 81 transform tests (1 skipped that needs the platform), mypy strict, ruff.
+
 ### Next
-1. Engine capabilities for the transform step: a Parquet reader, the export and part
-   layout, session fields, the positional row id, and a null `event_date`.
+1. Kempower into Unity Catalog: check that Spark reads the null `event_date` partition as
+   null, and give the sink a MERGE for `charging_session`, which it does not have yet.
 2. Questions for the provider, now sharper: what `tempC` measures, whether the electrical
    columns are the DC output, and whether `soc` and `tempC` are samples or averages.
