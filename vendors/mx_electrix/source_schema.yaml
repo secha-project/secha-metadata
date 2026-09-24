@@ -1,8 +1,8 @@
 # --- header stub (onboarding/audit only; NOT a data-contract framework) ---
 vendor: mx_electrix
 source: measurements
-owner: "MX Electrix Oy (via Ville Heikkila, TAU)"
-contact: "ville.heikkila@tuni.fi"
+owner: "MX Electrix Oy (via the TAU data platform team)"
+contact: "TAU data platform team (SECHA)"
 sensitivity: partner-confidential        # flows through to canonical / UC tags
 refresh_cadence: daily                    # informational
 source_schema_version: "v2"               # MX Electrix API version

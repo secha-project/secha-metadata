@@ -9,7 +9,7 @@
 # MX Electrix slice. Deliberately out of slice (additive later, config-only):
 # harmonic orders 2,4,6,8-20 (U*, ids 23541-23659), harmonic currents I2-I20
 # (23691-23809), DC voltages Udc* (23842-23855).
-# Values are engineering units as stored - no device scaling factors (unlike Electrix).
+# Values are engineering units as stored: no device scaling factors (unlike Electrix).
 # =============================================================================
 vendor: procem_kampusareena_pq
 mapping_version: "1.0.0"

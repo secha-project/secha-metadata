@@ -135,7 +135,7 @@ def main(argv: list[str]) -> int:
             # LF pinned: generated docs are byte-identical on Windows and Linux CI
             path.write_text(content, encoding="utf-8", newline="\n")
     if check and stale:
-        print("STALE lineage docs:", ", ".join(stale), "- run: python lineage.py")
+        print(f"STALE lineage docs: {', '.join(stale)}. Run: python lineage.py")
         return 1
     print("lineage docs " + ("up to date" if check else "generated"))
     return 0

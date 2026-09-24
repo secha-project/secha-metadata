@@ -1,7 +1,10 @@
-# Changelog - mx_electrix mapping
+# Changelog: vendor config `mx_electrix`
 
 Records every schema/mapping change for this vendor.
 Additive = safe; rename = column-mapping + new version; removal = flag; type change = forbidden.
+
+## Unreleased
+- The header stub names a role (`owner`, `contact`) instead of a person. No mapping change.
 
 ## 1.1.0 - 2026-06-18
 - Split the ambiguous `voltage_unbalance` quantity into `voltage_unbalance_negative_seq` (U2/U1) and

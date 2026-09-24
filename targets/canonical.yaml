@@ -1,6 +1,6 @@
 # =============================================================================
 # Sink binding: where/how the engine writes canonical data. SHARED across all
-# vendors (not per-vendor) - per-vendor files stay pure transformation knowledge.
+# vendors (not per-vendor), so per-vendor files stay pure transformation knowledge.
 # =============================================================================
 target: canonical_measurement
 catalog: secha

@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 VOCAB = yaml.safe_load((ROOT / "canonical" / "quantity_vocabulary.yaml").read_text("utf-8"))
 MX = ROOT / "vendors" / "mx_electrix"
 PROCEM = ROOT / "vendors" / "procem_kampusareena_pq"
+KEMPOWER = ROOT / "vendors" / "kempower"
 
 # Column positions in a mapping row, as the workbook lays them out.
 SOURCE, NAME, SOURCE_UNIT, QUANTITY, PHASE, VARIANT, ORDER = range(7)
@@ -77,6 +78,14 @@ def test_a_wide_source_does_not_list_its_structural_fields() -> None:
     names = {row[0] for row in unmapped_points("mx_electrix", MX, {})}
     for structural in ("timestamp", "meter", "id"):
         assert structural not in names, "these carry the reading, they are not measurements"
+
+
+def test_session_columns_are_structure_and_omissions_say_why() -> None:
+    """A session's id, offset and attributes are used; a deliberate omission is not 'not yet'."""
+    reasons = {row[0]: row[4] for row in unmapped_points("kempower", KEMPOWER, {})}
+    for used in ("transactionId", "sampleTime10sIncrement", "EVModel", "country", "weekday"):
+        assert used not in reasons, "the session block consumes it"
+    assert reasons["quarter"].startswith("left out on purpose"), "follows from month; dropped"
 
 
 def test_a_missing_value_reads_differently_from_a_missing_timestamp() -> None:

@@ -1,5 +1,9 @@
 # Changelog: vendor config `procem_kampusareena_pq`
 
+## [Unreleased]
+### Changed
+- The header stub names a role (`owner`, `contact`) instead of a person. No mapping change.
+
 ## [1.0.0] - 2026-07-06
 ### Added
 - Initial mapping for the Kampusareena EV-charging-station PQ meter (`LV3_EVCharging_*`,

@@ -1,8 +1,8 @@
 # --- header stub (onboarding/audit only; NOT a data-contract framework) ---
 vendor: procem_kampusareena_pq
 source: daily_dump
-owner: "ProCem/ProCemPlus platform (TAU), maintained by Ville Heikkila"
-contact: "ville.heikkila@tuni.fi"
+owner: "ProCem/ProCemPlus platform (TAU)"
+contact: "TAU data platform team (SECHA)"
 sensitivity: project-internal             # catalog rows carry no confidential flag for this device
 refresh_cadence: daily                    # one 7z archive per LOCAL (Europe/Helsinki) day
 source_schema_version: "Procem_IDs_v1.2"  # the catalog version these mappings were curated from

@@ -12,8 +12,8 @@
 # =============================================================================
 vendor: procem_kampusareena_pq
 source: daily_dump
-owner: "ProCem/ProCemPlus platform (TAU), maintained by Ville Heikkila"
-contact: "ville.heikkila@tuni.fi"
+owner: "ProCem/ProCemPlus platform (TAU)"
+contact: "TAU data platform team (SECHA)"
 sensitivity: project-internal
 refresh_cadence: daily
 source_schema_version: "Procem_IDs_v1.2"

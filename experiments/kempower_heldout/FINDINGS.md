@@ -8,6 +8,11 @@ study, not a rate.
 
 Order of events: pre-registration committed `2c98448` (10:41 UTC); drafts sealed
 unopened; gold rulebook sealed 10:51 and committed `569dc78` (10:58); unsealed 10:59.
+`verify_seals.py` checks all 337 seals: committed files against the repository's history,
+and the drafts and model replies, which stay out of the repository, against the files on
+disk. Those 300 files are archived with the partner catalog as
+`heldout-drafts-and-replies-2026-09-23.zip` (SHA-256 `f9d45a56...b3a6`); unpacked into the
+repository root, every seal verifies.
 
 ## 1. With the vocabulary as it stood, no column could be answered
 

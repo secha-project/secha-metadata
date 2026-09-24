@@ -237,17 +237,29 @@ def unmapped_points(
         return sorted(rows, key=lambda row: row[1])
 
     record = source_schema.get("record") or {}
+    session = source_schema.get("session") or {}
     used = {column["src"] for column in mapping.get("columns", [])}
     for rule in mapping.get("generated", []):
         for order in rule["order"]:
             for index in rule["phase_map"]:
                 used.add(rule["pattern"].format(order=order, p=index))
+    # fields that carry a reading rather than measure something: the record's fields, and
+    # a session's id, offset and the attributes that fill charging_session
     structural = {value for key, value in record.items() if key.endswith("_field")}
-    return [
-        [field["name"], field.get("desc", ""), "", field.get("unit") or "", "not mapped yet"]
-        for field in source_schema.get("fields", [])
-        if field["name"] not in used and field["name"] not in structural
-    ]
+    structural |= {session.get("id_field"), session.get("offset_field")}
+    structural |= set((session.get("attributes") or {}).values())
+    rows = []
+    for field in source_schema.get("fields", []):
+        name = field["name"]
+        if name in used or name in structural:
+            continue
+        reason = (
+            f"left out on purpose: record structure, not a measurement (specs/{vendor}.spec.yaml)"
+            if pattern and pattern.search(name)
+            else "not mapped yet"
+        )
+        rows.append([name, field.get("desc", ""), "", field.get("unit") or "", reason])
+    return rows
 
 
 def _missing_field_plain(rule: dict, applies: str, roles: dict[str, str]) -> str:

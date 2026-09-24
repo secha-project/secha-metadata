@@ -210,12 +210,12 @@ def _check_no_collapse(mapping: dict, errors: list[str], label: str) -> None:
             row.get("aggregation"),
         )
 
-    for (quantity, phase, variant, harmonic_order, _agg), sources in seen.items():
+    for (quantity, phase, variant, harmonic_order, aggregation), sources in seen.items():
         if len(sources) > 1:
             errors.append(
                 f"[collapse] {label}: {sorted(sources)} share identity "
-                f"(quantity={quantity} phase={phase} variant={variant} order={harmonic_order}) "
-                f"- indistinguishable in canonical"
+                f"(quantity={quantity} phase={phase} variant={variant} order={harmonic_order} "
+                f"aggregation={aggregation}), so they are indistinguishable in canonical"
             )
 
 

@@ -152,6 +152,8 @@ declares no units and no descriptions: `transactionId`, `country`, `EVModel`, `y
 - **Review time** was not measured by an independent reviewer: the only people who could
   review knew the gold. Edits are the effort measure, as pre-registered.
 - Protocol deviations D3 (gate-problem split) and D4 (C2 after unsealing) appended.
+- 2026-09-24: all 337 seals verify from a fresh clone (`verify_seals.py`); the 300 drafts and
+  model replies, which the repository does not hold, are archived with the partner catalog.
 
 ### Next
 1. Engine capabilities for the transform step: a Parquet reader, the export and part

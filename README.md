@@ -46,7 +46,7 @@ docs/           architecture diagrams + generated lineage reports + the onboardi
 | Type | File | Notes |
 |---|---|---|
 | Canonical target schema | `canonical/canonical_schema.yaml` (+ vocab, units) | long fact + thin dims, standards-aware |
-| Source schema metadata | `vendors/<v>/source_schema.yaml` | header stub + **shape/format/locale** blocks + fields (verbatim vendor descriptions) + the vendor's `naming_convention` |
+| Source schema metadata | `vendors/<v>/source_schema.yaml` | header stub + **shape/format/locale** blocks + `record` interpretation (and a `session` block for charging-session sources) + fields (verbatim vendor descriptions where the vendor gives them) + the vendor's `naming_convention` |
 | Mapping metadata | `vendors/<v>/mapping.yaml` | LAV source→canonical; wide `columns:` or long `rows:`; semver-versioned |
 | Transformation rules | `transforms/library.yaml` | **typed** (parameter signatures) |
 | Validation rules | `vendors/<v>/validation.yaml` | row-level only (scope) |
@@ -83,9 +83,10 @@ contains only the proposed vendor, so `vendors/` is never touched until the prop
 clean, and a rejected draft leaves nothing behind. Nothing is installed without `--apply`,
 and `--apply` refuses to overwrite an existing vendor.
 
-**A clean validator run is the start of the review, not the end.** On the one vendor with
-ground truth, proposals are 98 to 100% valid and 38 to 84% correct, so almost every wrong
-proposal is still a legal config. Every generated file says so in its header, and
+**A clean validator run is the start of the review, not the end.** On ProCem, proposals are
+98 to 100% valid and 38 to 84% correct, so almost every wrong proposal is still a legal config.
+On the held-out vendor, Kempower, the DC columns needed a phase value the vocabulary lacked; the
+drafts put them on existing phases, 7 of 18 on an AC phase, and the validator flagged none of them. Every generated file says so in its header, and
 `PROPOSAL.md` lists each entry with advisory notes for the checks the validator cannot
 make, such as a unit that could not measure the quantity it was paired with.
 
@@ -125,28 +126,36 @@ with the source field it came from.
 **Long (ProCem):** each raw record is already one reading, a `(rtl_id, value, epoch_ms)` triple; the
 mapping's `rows:` table (keyed by rtl_id, curated from the platform catalog) gives it meaning.
 
+**Sessions (Kempower):** a wide source whose rows are 10-second steps of charging sessions, with no
+clock time. The `session:` block names the session id, the seconds-since-start field and the
+columns that fill the `charging_session` entity; the rest unpivots like any wide record.
+
 The same physical thing always takes the same row shape: ProCem's phase-L1 voltage lands as another
 `voltage · L1` row in the *same* table as MX Electrix's. That convergence **is** interoperability,
 and it is now demonstrated live (one query, both vendors, identical columns).
 
 Full, auto-generated field-by-field traces live in
-[docs/lineage_mx_electrix.md](docs/lineage_mx_electrix.md) and
-[docs/lineage_procem_kampusareena_pq.md](docs/lineage_procem_kampusareena_pq.md) (produced by `lineage.py`).
+[docs/lineage_mx_electrix.md](docs/lineage_mx_electrix.md),
+[docs/lineage_procem_kampusareena_pq.md](docs/lineage_procem_kampusareena_pq.md) and
+[docs/lineage_kempower.md](docs/lineage_kempower.md) (produced by `lineage.py`).
 
 ## How extensibility works (the point)
 A new vendor's new measurement type = **add one entry to `quantity_vocabulary.yaml` + one mapping line
 → a new ROW** in the canonical fact. No new column, no new table, no migration. A genuinely new entity
 (different grain) gets a new sibling table; an unclassifiable field goes to a side-pocket.
 Measured evidence: onboarding ProCem (68 variables incl. Fryze/fundamental variants, harmonics,
-unbalance, energy counters) required **zero** vocabulary or unit-registry changes.
+unbalance, energy counters) required **zero** vocabulary or unit-registry changes. Kempower, the first
+source from outside power quality, used exactly this mechanism: two quantities (`state_of_charge`,
+`temperature`) and one phase value (`dc`), each an additive entry (vocabulary 1.3.0, canonical 1.1.0).
 
 ## Validation: what makes "config-driven" trustworthy
 `validate.py` runs three layers (enforced in CI + pre-commit + `pytest`):
 1. **Schema.** Every config conforms to its `meta-schemas/*.schema.json`.
 2. **Cross-references.** Every `quantity`/`phase`/`unit`/`variant`/`transform` exists; every wide
    mapping `src` exists in the source schema; generated patterns expand to real fields; long `rows:`
-   mappings are consistent with the declared shape and record block; transform args are complete and
-   known; golden rows conform to the vocabulary.
+   mappings are consistent with the declared shape and record block; a `session` block names real
+   fields and real `charging_session` attributes; transform args are complete and known; golden rows
+   conform to the vocabulary.
 3. **No-collapse.** No two mapped columns/rows share a canonical identity tuple
    `(quantity, phase, variant, harmonic_order, aggregation)`, so nothing silently merges.
 
@@ -154,9 +163,12 @@ Serving views get the same treatment: a view file must be a single SELECT/WITH (
 hide in one) and must reference the fact table through the `{canonical}` placeholder, so views
 stay platform-portable and always read the canonical fact.
 
-A malformed, dangling, or colliding config **cannot merge**, which is exactly what lets the future LLM
-authoring assistant propose configs safely (a human just approves the PR). `lineage.py --check` keeps the
-generated lineage docs from drifting out of sync with the configs.
+A malformed, dangling, or colliding config **cannot merge**, which is what lets `propose.py` drafts be
+gated automatically. It cannot make a draft right: on the held-out vendor, every draft put the DC
+columns on a phase the vocabulary already had, and the validator flagged none of them
+([experiments/kempower_heldout/FINDINGS.md](experiments/kempower_heldout/FINDINGS.md)). A human still
+reads the diff. `lineage.py --check` keeps the generated lineage docs from drifting out of sync with the
+configs.
 
 ## Design decisions (the load-bearing ones)
 - **LAV per-source mappings.** Each vendor maps independently *to* the canonical; the canonical never
@@ -165,8 +177,10 @@ generated lineage docs from drifting out of sync with the configs.
   IEEE 1459, …); aligned to standards, not conformant to them.
 - **Long canonical + wide serving views.** Long fact for interoperability; wide pivots for consumers.
 - **Identity tuple, no silent collapse.** Distinct measurements get distinct identities; additive
-  discriminators (per-row `aggregation` arrived with ProCem; `channel` and others follow) are added
-  as new column families are mapped.
+  discriminators (per-row `aggregation` arrived with ProCem, per-column `aggregation` with Kempower;
+  `channel` and others follow) are added as new column families are mapped. A source with no clock
+  time keeps its readings distinct through the row id: for Kempower, the row's position in its
+  immutable landed part (`record.row_id_from: payload_position`), so no existing id changed.
 - **Explicit `rows:` tables over clever classification.** Long sources map by an explicit, validated
   rtl_id table (generated once from the vendor catalog, then curated), not by name-pattern regexes:
   auditable, diffable, and guarded by the same three validation layers.
@@ -181,21 +195,21 @@ Removal = flag, not fail. Type change / repurpose = forbidden. Bump `mapping_ver
 in the vendor `CHANGELOG.md` on every change.
 
 ## Adding a new vendor
-1. Create `vendors/<vendor>/`: `source_schema.yaml` (header + shape + format/locale + fields),
-   `mapping.yaml` (wide `columns:` or long `rows:`), `validation.yaml`, `CHANGELOG.md`.
+1. Create `vendors/<vendor>/`: `source_schema.yaml` (header + shape + format/locale + record, a
+   session block where rows belong to charging sessions, + fields), `mapping.yaml` (wide `columns:` or
+   long `rows:`), `validation.yaml`, `CHANGELOG.md`.
 2. Add any new quantities to `canonical/quantity_vocabulary.yaml` (and units to `units.yaml` if needed).
-3. Run `python validate.py` and `python lineage.py`; open a PR. CI gates it. **No engine change.**
+3. Run `python validate.py` and `python lineage.py`; open a PR. CI gates it. **No vendor-specific
+   engine change**; a source unlike any before may first need a generic capability.
 
-Proven twice: `mx_electrix` (wide JSON over an authenticated API) and `procem_kampusareena_pq`
-(long tab-separated triples from daily file archives). The third, `kempower` (charging
-sessions in a Parquet export, with no clock time), is configured; the engine capabilities it
-needs are the next step. The measured onboarding cost of the second
-vendor is logged in [docs/onboarding-diary-procem.md](docs/onboarding-diary-procem.md).
-
-The third vendor, Kempower, is the held-out test: nothing was tuned on it. Its onboarding
-starts with a pre-registered, sealed `propose.py` draft
-([experiments/kempower_heldout/PROTOCOL.md](experiments/kempower_heldout/PROTOCOL.md)), and
-its cost is logged in [docs/onboarding-diary-kempower.md](docs/onboarding-diary-kempower.md).
+Proven twice end to end: `mx_electrix` (wide JSON over an authenticated API) and
+`procem_kampusareena_pq` (long tab-separated triples from daily file archives); the cost of the second
+is logged in [docs/onboarding-diary-procem.md](docs/onboarding-diary-procem.md). The third, `kempower`
+(charging sessions in a Parquet export, with no clock time), is the held-out test: nothing was tuned
+on it. It is configured, and the generic engine capabilities it needs (a Parquet reader, sessions, a
+positional row id) are the next step. Its onboarding began with a pre-registered, sealed `propose.py`
+draft ([experiments/kempower_heldout/PROTOCOL.md](experiments/kempower_heldout/PROTOCOL.md)), and its
+cost is logged in [docs/onboarding-diary-kempower.md](docs/onboarding-diary-kempower.md).
 
 ## Develop
 ```bash
@@ -204,13 +218,14 @@ uv run python validate.py        # schema + cross-reference + no-collapse
 uv run python lineage.py         # regenerate docs/lineage_<vendor>.md
 uv run python lineage.py --check # fail if lineage docs are stale
 uv run pytest
-uv run ruff check .
+uv run ruff check . && uv run ruff format --check .
 ```
 (No uv? `python -m venv .venv && .venv/Scripts/pip install pyyaml jsonschema pytest ruff`, then run the
 same commands without the `uv run` prefix.)
 
 ## Status / open items
-- **Scope:** two vendors, both consumed end-to-end by `secha-transform`.
+- **Scope:** three vendors configured. The first two are consumed end-to-end by
+  `secha-transform`; (3) Kempower awaits the generic engine capabilities listed above.
   (1) MX Electrix `/measurements/` (wide JSON API): a full real day, 1,440 records → ~36,000 canonical
   rows; the golden fixture pins the coefficient=1 subset.
   (2) ProCem Kampusareena EV-charging PQ (`vendors/procem_kampusareena_pq/`, long 1 Hz triples +

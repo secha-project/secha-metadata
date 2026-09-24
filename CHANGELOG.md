@@ -5,6 +5,24 @@ Repository-level changes to `secha-metadata`. Per-vendor mapping changes are log
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
+### Added (held-out test: verification)
+- `experiments/kempower_heldout/verify_seals.py`: checks every seal the way an examiner with a
+  fresh clone would. A committed file must match some commit of the repository, in LF or in the
+  CRLF form a Windows working copy had when it was sealed; a local-only file (drafts, model
+  replies, the partner catalog) must match the file on disk, or is reported absent.
+### Fixed
+- `review_sheet.py`: a charging-session source no longer lists its session id, offset and
+  session attributes as unmapped points; they are structure, like the record fields. A field
+  the vendor spec excludes as record structure now reads "left out on purpose", not "not
+  mapped yet".
+- The no-collapse error names the aggregation it compares, now that wide columns carry one.
+### Changed
+- `LICENSE`: the proprietary notice, matching `pyproject.toml` (the file said MIT).
+- Pre-commit ruff hook pinned to v0.16.8, the version CI resolves, up from v0.6.9.
+- README: three vendors configured; session sources; per-column aggregation and the positional
+  row id; and the held-out lesson that the validator gates drafts but cannot make them right.
+- Dashes used as punctuation in comments, a changelog title and two messages replaced.
+- Vendor headers and the ProCem spec name a role for `owner` and `contact` instead of a person.
 ### Added (held-out test: Kempower)
 - `specs/kempower.spec.yaml`: the human-authored facts for drafting the third vendor, with a
   naming convention written before any model saw the catalog.
