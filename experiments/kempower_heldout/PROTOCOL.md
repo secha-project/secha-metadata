@@ -143,3 +143,19 @@ from the affected status line was a count.
 ### D2, 2026-09-23: kimi-k3 is included
 
 It answered all ten points, meeting the condition set above for the optional arm.
+
+### D3, 2026-09-23: the gate-problem split undercounts proposal-caused problems
+
+The pre-registered split counts a gate problem as proposal-caused when its text names a
+proposed column. Schema errors name a mapping entry by index instead (`columns/2`), so an
+entry-level error such as an unexpected `aggregation` key counts as operational. Read by
+file, every gate problem in every run is in the drafted `mapping.yaml` and none is in the
+operational files taken from the spec. `REPORT.md` keeps the pre-registered split;
+`FINDINGS.md` reports both.
+
+### D4, 2026-09-23: C2 was run after unsealing C0 and C1
+
+C2 was pre-registered as "later". It ran after the gold was committed and after C0 and C1
+were unsealed and scored, with no shared rulebook file changed while it ran. Its drafts
+were sealed before they were scored. Knowing the C0 and C1 results could not influence the
+gold, which was committed first.

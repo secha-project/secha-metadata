@@ -15,6 +15,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning: [S
   rulebook and refuses to run on an uncommitted rulebook or a changed proposal.
 - `docs/onboarding-diary-kempower.md`: the RQ3 and RQ4 cost record for the third vendor,
   including six things the canonical layer did not anticipate, found before authoring.
+### Added (held-out test: results)
+- `experiments/kempower_heldout/REPORT.md` (pre-registered scores) and `FINDINGS.md`: with
+  the vocabulary as it stood no Kempower column could be answered; missing quantities were
+  invented and always caught, a missing phase value was force-fitted and never caught; with
+  the vocabulary extended, documentation decided the phase.
+- `analysis_posthoc.py`: per-field and phase breakdowns and one sensitivity check, labelled
+  post hoc; it refuses to run on a draft that differs from its seal.
 ### Added (vendor #3: Kempower, hand-authored before any draft was opened)
 - `vendors/kempower/`: the passenger charging dataset. Five measurement columns
   (state of charge, temperature, and the DC output's power, current and voltage); the

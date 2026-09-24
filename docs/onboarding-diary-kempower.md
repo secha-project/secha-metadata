@@ -131,8 +131,30 @@ declares no units and no descriptions: `transactionId`, `country`, `EVModel`, `y
   the same assistant-supported workflow as the ProCem diary, and the correction effort will
   be measured in that same workflow, so the comparison is like for like.
 
+### 2026-09-23, Step 3: unsealed and scored (from 10:59 UTC)
+- **Order of events, all on record:** pre-registration committed `2c98448` at 10:41:45;
+  gold sealed at 10:51:29 and committed `569dc78` at 10:58:42, byte-identical to its seal;
+  unsealed at 10:59:25 by `score.py`, which checked every draft against its seal first.
+- **Headline** (details in `experiments/kempower_heldout/FINDINGS.md`):
+  1. With the vocabulary as it stood, none of the five columns could be answered: the
+     rulebook needed two new quantities and a new phase value.
+  2. Missing quantities were invented, 12 of 12, and the validator caught every one; 8 of
+     the invented names are the ones the rulebook adopted.
+  3. The missing phase value was force-fitted, 18 of 18, and nothing caught it: 7 of those
+     entries claim an AC phase for a DC output. The validator guards nouns, not qualifiers.
+  4. With the vocabulary extended (C2, run 11:01 to 12:06), every quantity and unit was
+     right in all three arms, and the convention's one sentence about DC decided the
+     phase: `dc` in 8 of 9 entries with it, 0 of 9 without.
+- **Correction effort:** 2 field edits (`codestral-2508`, `kimi-k3`) and 3 (`phi4-14b`)
+  with the vocabulary and the documentation in place, out of 30 fields; 5 to 8 without,
+  plus the vocabulary work itself. The remaining edits come mostly from one gold judgment the
+  provider has not confirmed (`soc` and `tempC` as instantaneous).
+- **Review time** was not measured by an independent reviewer: the only people who could
+  review knew the gold. Edits are the effort measure, as pre-registered.
+- Protocol deviations D3 (gate-problem split) and D4 (C2 after unsealing) appended.
+
 ### Next
-1. Commit the rulebook, then run `score.py`: it refuses to score before the commit.
-2. C2: the same arms and conditions against vocabulary 1.3.0, sealed before scoring.
-3. Engine capabilities for the transform step: a Parquet reader, the export and part
+1. Engine capabilities for the transform step: a Parquet reader, the export and part
    layout, session fields, the positional row id, and a null `event_date`.
+2. Questions for the provider, now sharper: what `tempC` measures, whether the electrical
+   columns are the DC output, and whether `soc` and `tempC` are samples or averages.
