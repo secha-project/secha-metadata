@@ -185,8 +185,39 @@ declares no units and no descriptions: `transactionId`, `country`, `EVModel`, `y
   straddle two parts, merged on `session_id` at load. `measurement_id` is unique in every part.
 - **Gates:** 81 transform tests (1 skipped that needs the platform), mypy strict, ruff.
 
+### 2026-09-24, Step 5: into Unity Catalog (≈1 h, 12:56 to 13:58 UTC, 17 min of it waiting)
+- **One generic sink change:** the Delta sink loads any entity the target declares under
+  `dimensions:`, with the same DDL, dedupe and MERGE builders as the fact table
+  (`delta-load --entity charging_session`, merged on `session_id`). +120 / -33 lines in the
+  sink and CLI (docstrings included; the final count, after the pre-commit review of
+  2026-09-25 added fail-fast checks and a deterministic dedupe for keys without
+  `ingested_at`), no vendor name in either; the fact table's SQL is byte-identical to
+  before. The one Kempower-specific file is the operational load script outside the package.
+  Rulebook changes: 0. `charging_session` and its merge key have been declared in
+  `targets/canonical.yaml` since the first scaffold (2026-06-24), three months before this
+  vendor arrived.
+- **Pilot, part 0:** 3,680,010 rows and 3,593 sessions, verified in Unity Catalog. Spark
+  reads the null `event_date` as a real NULL. A second run changed nothing.
+- **A platform limit, found the hard way:** a 10-part MERGE filled a worker's scratch space
+  (a 32 GB swap-backed `/tmp`), and its re-run, made only to read the error, left an 8 GB copy
+  that blocked every job on that worker for 28 minutes, until Spark's periodic cleanup. Nothing
+  in the table changed. Recorded in `secha-transform/docs/phase3-log.md` with the lessons.
+- **Loaded: every tenth part** (0, 10, ..., 90), one per MERGE: **36,348,545 Kempower rows**
+  (10.1% of 358,967,830), 41,884,113 in the table, and **40,175 sessions**. Each MERGE grew the
+  table by exactly its part's local row count. The full 359M rows stay in local canonical
+  Parquet until the platform's scratch space moves to disk.
+- **Verified in Unity Catalog against the local files:** 7,269,709 rows per quantity with the
+  declared phase and aggregation; 55 suspect, all voltage; no clock time and a session on every
+  row; every session present in `charging_session`; the other two vendors unchanged.
+- **Three vendors, one catalog:** after `delta-views`, the quantity dimension covers
+  Kempower's `state_of_charge` and `temperature`, so every fact row of all three vendors joins
+  it (14,539,418 rows did not before). `pq_minute_wide` is unchanged, as it must be: a minute
+  view needs clock time, which Kempower does not have.
+- **Gates:** 90 transform tests (1 skipped that needs the platform), mypy strict, ruff; the
+  rulebook validator and 64 metadata tests.
+
 ### Next
-1. Kempower into Unity Catalog: check that Spark reads the null `event_date` partition as
-   null, and give the sink a MERGE for `charging_session`, which it does not have yet.
-2. Questions for the provider, now sharper: what `tempC` measures, whether the electrical
-   columns are the DC output, and whether `soc` and `tempC` are samples or averages.
+1. Questions for the provider, now sharper: what `tempC` measures, whether the electrical
+   columns are the DC output, and whether `soc` and `tempC` are samples or averages. An
+   absolute session start time would also give the rows clock time.
+2. The full Kempower load, once the platform's Spark scratch space moves from `/tmp` to disk.

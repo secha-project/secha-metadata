@@ -202,14 +202,15 @@ in the vendor `CHANGELOG.md` on every change.
 3. Run `python validate.py` and `python lineage.py`; open a PR. CI gates it. **No vendor-specific
    engine change**; a source unlike any before may first need a generic capability.
 
-Proven twice end to end: `mx_electrix` (wide JSON over an authenticated API) and
+Proven end to end three times. The first two are `mx_electrix` (wide JSON over an authenticated API) and
 `procem_kampusareena_pq` (long tab-separated triples from daily file archives); the cost of the second
 is logged in [docs/onboarding-diary-procem.md](docs/onboarding-diary-procem.md). The third, `kempower`
 (charging sessions in a Parquet export, with no clock time), is the held-out test: nothing was tuned
-on it. It is configured, and the generic engine capabilities it needs (a Parquet reader, sessions, a
-positional row id) are the next step. Its onboarding began with a pre-registered, sealed `propose.py`
-draft ([experiments/kempower_heldout/PROTOCOL.md](experiments/kempower_heldout/PROTOCOL.md)), and its
-cost is logged in [docs/onboarding-diary-kempower.md](docs/onboarding-diary-kempower.md).
+on it. It needed generic engine capabilities (a Parquet reader, sessions, a positional row id), built
+without vendor logic, and no rulebook change to reach Unity Catalog. Its onboarding began with a
+pre-registered, sealed `propose.py` draft
+([experiments/kempower_heldout/PROTOCOL.md](experiments/kempower_heldout/PROTOCOL.md)), and its cost is
+logged in [docs/onboarding-diary-kempower.md](docs/onboarding-diary-kempower.md).
 
 ## Develop
 ```bash
@@ -224,18 +225,23 @@ uv run ruff check . && uv run ruff format --check .
 same commands without the `uv run` prefix.)
 
 ## Status / open items
-- **Scope:** three vendors configured. The first two are consumed end-to-end by
-  `secha-transform`; (3) Kempower awaits the generic engine capabilities listed above.
+- **Scope:** three vendors configured, all consumed end to end by `secha-transform`.
   (1) MX Electrix `/measurements/` (wide JSON API): a full real day, 1,440 records → ~36,000 canonical
   rows; the golden fixture pins the coefficient=1 subset.
   (2) ProCem Kampusareena EV-charging PQ (`vendors/procem_kampusareena_pq/`, long 1 Hz triples +
   catalog semantics via the additive `rows:` construct): a full real day, 14,476,804 records →
   5,499,568 canonical rows, with unmapped ids counted, never silent. One query now returns both
   vendors' voltage in identical canonical shape.
+  (3) Kempower (a wide Parquet export of charging sessions, no clock time): all 99 landed parts,
+  71,793,566 records → 358,967,830 canonical rows and 396,848 sessions, reconciled against the raw
+  export.
 - **Deployed (Phase 3):** the target binding in this repo drives the live platform sink.
-  `secha.canonical.measurement` (5,535,568 rows, both vendors, idempotent MERGE re-runs verified)
-  and the `secha.serving.pq_minute_wide` snapshot exist in Unity Catalog on the TUNI cluster,
-  created from this rulebook's DDL, table properties, and `serving/` definitions.
+  `secha.canonical.measurement` holds 41,884,113 rows: the first two vendors' 5,535,568 and every
+  tenth Kempower part, 36,348,545 (the full export waits on a platform limit). With
+  `secha.canonical.charging_session` (40,175 sessions, loaded through the `dimensions:` binding) and
+  the `secha.serving.pq_minute_wide` snapshot, it exists in Unity Catalog on the TUNI cluster, created
+  from this rulebook's DDL, table properties, and `serving/` definitions; MERGE re-runs are
+  idempotent.
 - **Confirmed with the data platform:** energy counters are **kWh/kvarh** (despite `wh`/`varh` attribute
   names); device-factor scaling is **multiply** by `uk`/`ik`; omitting the API `fields` param returns all
   fields; MX Electrix timestamps are UTC; ProCem day files rotate at **Helsinki-local** midnight.
